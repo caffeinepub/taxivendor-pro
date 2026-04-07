@@ -1,0 +1,183 @@
+type _ImmutableObjectStorageRefillResult = 
+ record {
+   success: opt bool;
+   topped_up_amount: opt nat;
+ };
+type _ImmutableObjectStorageRefillInformation = record {
+                                                  proposed_top_up_amount:
+                                                   opt nat;};
+type _ImmutableObjectStorageCreateCertificateResult = 
+ record {
+   blob_hash: text;
+   method: text;
+ };
+type VendorStatus = 
+ variant {
+   approved;
+   pending;
+   rejected;
+ };
+type VendorSignupInput = 
+ record {
+   aadhaarCard: ExternalBlob;
+   companyName: text;
+   drivingLicence: ExternalBlob;
+   mobile: text;
+   name: text;
+   passwordHash: text;
+ };
+type VendorInfo = 
+ record {
+   aadhaarCard: ExternalBlob;
+   companyName: text;
+   createdAt: int;
+   drivingLicence: ExternalBlob;
+   mobile: text;
+   name: text;
+   "principal": principal;
+   status: VendorStatus;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserApprovalInfo = 
+ record {
+   "principal": principal;
+   status: ApprovalStatus;
+ };
+type FacilityInput = 
+ record {
+   active: bool;
+   description: text;
+   name: text;
+ };
+type FacilityId = nat;
+type Facility = 
+ record {
+   active: bool;
+   createdAt: int;
+   description: text;
+   id: FacilityId;
+   name: text;
+ };
+type ExternalBlob = blob;
+type DriverDetails = 
+ record {
+   carModel: text;
+   driverName: text;
+   mobile: text;
+   rcBook: ExternalBlob;
+ };
+type DashboardStats = 
+ record {
+   approvedVendors: nat;
+   cancelledBookings: nat;
+   completedBookings: nat;
+   confirmedBookings: nat;
+   newBookings: nat;
+   pendingVendors: nat;
+   totalBookings: nat;
+   totalVendors: nat;
+ };
+type City = 
+ record {
+   city: text;
+   state: text;
+ };
+type BookingType = 
+ variant {
+   local;
+   oneWay;
+   roundTrip;
+ };
+type BookingStatus = 
+ variant {
+   cancelled;
+   completed;
+   confirmed;
+   new;
+ };
+type BookingInput = 
+ record {
+   bookingType: BookingType;
+   commission: nat;
+   date: text;
+   driverEarning: nat;
+   dropCity: text;
+   dropState: text;
+   pickupCity: text;
+   pickupState: text;
+   submitterMobile: text;
+   submitterName: text;
+   submitterWhatsApp: text;
+   time: text;
+ };
+type BookingId = nat;
+type Booking = 
+ record {
+   bookingType: BookingType;
+   commission: nat;
+   createdAt: int;
+   date: text;
+   driverDetails: opt DriverDetails;
+   driverEarning: nat;
+   dropCity: text;
+   dropState: text;
+   id: BookingId;
+   pickupCity: text;
+   pickupState: text;
+   status: BookingStatus;
+   submitterMobile: text;
+   submitterName: text;
+   submitterWhatsApp: text;
+   time: text;
+   vendorPrincipal: principal;
+ };
+type ApprovalStatus = 
+ variant {
+   approved;
+   pending;
+   rejected;
+ };
+service : {
+  _immutableObjectStorageBlobsAreLive: (hashes: vec blob) -> (vec bool) query;
+  _immutableObjectStorageBlobsToDelete: () -> (vec blob) query;
+  _immutableObjectStorageConfirmBlobDeletion: (blobs: vec blob) -> ();
+  _immutableObjectStorageCreateCertificate: (blobHash: text) ->
+   (_ImmutableObjectStorageCreateCertificateResult);
+  _immutableObjectStorageRefillCashier: (refillInformation:
+   opt _ImmutableObjectStorageRefillInformation) ->
+   (_ImmutableObjectStorageRefillResult);
+  _immutableObjectStorageUpdateGatewayPrincipals: () -> ();
+  _initializeAccessControl: () -> ();
+  adminCreateBooking: (vendorPrincipal: principal, input: BookingInput) ->
+   (BookingId);
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  createBooking: (input: BookingInput) -> (BookingId);
+  createFacility: (input: FacilityInput) -> (FacilityId);
+  deleteFacility: (id: FacilityId) -> ();
+  getBooking: (id: BookingId) -> (opt Booking) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getDashboardStats: () -> (DashboardStats) query;
+  getMyVendorProfile: () -> (opt VendorInfo) query;
+  getVendorProfile: ("principal": principal) -> (opt VendorInfo) query;
+  isCallerAdmin: () -> (bool) query;
+  isCallerApproved: () -> (bool) query;
+  listAllBookings: (vendorFilter: opt principal) -> (vec Booking) query;
+  listAllVendors: () -> (vec VendorInfo) query;
+  listApprovals: () -> (vec UserApprovalInfo) query;
+  listFacilities: () -> (vec Facility) query;
+  listMyBookings: () -> (vec Booking) query;
+  requestApproval: () -> ();
+  searchCities: (prefix: text) -> (vec City) query;
+  setApproval: (user: principal, status: ApprovalStatus) -> ();
+  setDriverDetails: (id: BookingId, details: DriverDetails) -> ();
+  setVendorStatus: ("principal": principal, status: VendorStatus) -> ();
+  updateBookingStatus: (id: BookingId, status: BookingStatus) -> ();
+  updateFacility: (id: FacilityId, input: FacilityInput) -> ();
+  vendorLogin: (mobile: text, passwordHash: text) -> (opt principal) query;
+  vendorSignup: (input: VendorSignupInput) -> ();
+}

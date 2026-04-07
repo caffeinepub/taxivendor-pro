@@ -1,0 +1,21 @@
+{
+  "overview": "A mobile-first taxi booking vendor app where vendors register and submit bookings, admin reviews and approves applications, and all parties can view booking and driver details.",
+  "features": [
+    "Vendor signup with document uploads (driving licence, Aadhaar card, RC book)",
+    "Admin approval before vendors can login",
+    "Booking creation with city autocomplete (pickup/drop), date, time, driver earning, commission",
+    "Booking types: One Way, Round Trip, Local",
+    "Admin panel: manage applications, view all bookings, create bookings, manage facilities",
+    "Driver details view with clickable WhatsApp and mobile contact links",
+    "Mobile-first responsive design"
+  ],
+  "category": "productivity",
+  "tags": [
+    "taxi",
+    "booking",
+    "vendor",
+    "admin",
+    "mobile-first"
+  ],
+  "last_updated": "2026-04-07T21:19:02.004Z"
+}
