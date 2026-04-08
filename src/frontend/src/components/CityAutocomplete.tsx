@@ -70,12 +70,12 @@ export default function CityAutocomplete({
       <label className="form-label" htmlFor={id}>
         {label}
       </label>
-      <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <div className="relative flex items-center">
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary flex-shrink-0 pointer-events-none z-10" />
         <input
           id={id}
           type="text"
-          className="form-input pl-9 pr-8"
+          className="form-input pl-9 pr-9 min-w-0 w-full"
           placeholder={placeholder}
           value={query}
           onChange={handleInputChange}
@@ -85,38 +85,39 @@ export default function CityAutocomplete({
         />
         <ChevronDown
           className={cn(
-            "absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none transition-transform",
+            "absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none transition-transform flex-shrink-0",
             open && "rotate-180",
           )}
         />
       </div>
 
       {state && (
-        <p className="text-xs text-muted-foreground mt-1 pl-1">{state}</p>
+        <p className="text-xs text-primary mt-1 pl-1 font-medium">{state}</p>
       )}
 
       {open && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-elevated overflow-hidden max-h-56 overflow-y-auto">
+        <div className="absolute z-[9999] top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-elevated overflow-hidden max-h-60 overflow-y-auto">
           {isLoading ? (
-            <div className="px-4 py-3 text-sm text-muted-foreground">
-              Searching...
+            <div className="px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              Dhundh raha hai...
             </div>
           ) : results.length === 0 ? (
             <div className="px-4 py-3 text-sm text-muted-foreground">
-              No cities found
+              Koi city nahi mili
             </div>
           ) : (
             results.map((city) => (
               <button
                 key={city.id}
                 type="button"
-                className="w-full flex flex-col items-start px-4 py-2.5 hover:bg-muted/50 transition-colors text-left"
+                className="w-full flex flex-col items-start px-4 py-2.5 hover:bg-muted/50 transition-colors text-left border-b border-border/30 last:border-0"
                 onClick={() => handleSelect(city)}
               >
-                <span className="text-sm font-semibold text-foreground">
+                <span className="text-sm font-bold text-foreground leading-tight">
                   {city.name}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground mt-0.5">
                   {city.state}
                 </span>
               </button>

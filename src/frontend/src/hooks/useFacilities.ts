@@ -1,106 +1,95 @@
+import { useActor } from "@caffeineai/core-infrastructure";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createActor } from "../backend";
 import type { Facility } from "../types";
 
-let mockFacilities: Facility[] = [
-  {
-    id: "f1",
-    name: "AC Vehicle",
-    description: "Air-conditioned vehicles for comfortable travel",
-    active: true,
-    createdAt: Date.now() - 604800000,
-  },
-  {
-    id: "f2",
-    name: "24/7 Support",
-    description: "Round-the-clock customer support via phone and WhatsApp",
-    active: true,
-    createdAt: Date.now() - 518400000,
-  },
-  {
-    id: "f3",
-    name: "GPS Tracking",
-    description: "Real-time vehicle tracking for passenger safety",
-    active: true,
-    createdAt: Date.now() - 432000000,
-  },
-  {
-    id: "f4",
-    name: "Driver Verification",
-    description:
-      "All drivers go through background check and licence verification",
-    active: true,
-    createdAt: Date.now() - 345600000,
-  },
-  {
-    id: "f5",
-    name: "Insurance Coverage",
-    description: "Comprehensive travel insurance for all bookings",
-    active: false,
-    createdAt: Date.now() - 259200000,
-  },
-];
-
 export function useFacilities() {
+  const { actor } = useActor(createActor);
+
   return useQuery<Facility[]>({
     queryKey: ["facilities"],
     queryFn: async () => {
-      await new Promise((r) => setTimeout(r, 300));
-      return [...mockFacilities];
+      if (!actor) throw new Error("Backend not ready");
+      const list = await actor.listFacilities();
+      return list.map((f) => ({
+        id: f.id.toString(),
+        name: f.name,
+        description: f.description,
+        active: f.active,
+        createdAt: Number(f.createdAt / 1_000_000n),
+      }));
     },
+    enabled: !!actor,
+    retry: 1,
   });
 }
 
 export function useAddFacility() {
+  const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (data: Pick<Facility, "name" | "description">) => {
-      await new Promise((r) => setTimeout(r, 400));
-      const facility: Facility = {
-        id: `f${Date.now()}`,
+      if (!actor) throw new Error("Backend not ready");
+      const id = await actor.createFacility({
         name: data.name,
         description: data.description,
         active: true,
-        createdAt: Date.now(),
-      };
-      mockFacilities.push(facility);
-      return facility;
+      });
+      return { id: id.toString() };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facilities"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
     },
   });
 }
 
 export function useUpdateFacility() {
+  const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       id,
       data,
     }: { id: string; data: Partial<Facility> }) => {
-      await new Promise((r) => setTimeout(r, 300));
-      const idx = mockFacilities.findIndex((f) => f.id === id);
-      if (idx !== -1) {
-        mockFacilities[idx] = { ...mockFacilities[idx], ...data };
-      }
-      return mockFacilities[idx];
+      if (!actor) throw new Error("Backend not ready");
+      const numericId = BigInt(id);
+      // Must fetch current state to merge partial update
+      const current = await actor.listFacilities();
+      const existing = current.find((f) => f.id === numericId);
+      if (!existing) throw new Error("Facility not found");
+      await actor.updateFacility(numericId, {
+        name: data.name ?? existing.name,
+        description:
+          data.description !== undefined
+            ? data.description
+            : existing.description,
+        active: data.active !== undefined ? data.active : existing.active,
+      });
+      return { id };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facilities"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
     },
   });
 }
 
 export function useDeleteFacility() {
+  const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (id: string) => {
-      await new Promise((r) => setTimeout(r, 300));
-      mockFacilities = mockFacilities.filter((f) => f.id !== id);
+      if (!actor) throw new Error("Backend not ready");
+      await actor.deleteFacility(BigInt(id));
       return id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["facilities"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
     },
   });
 }

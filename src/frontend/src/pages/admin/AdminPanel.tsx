@@ -1,10 +1,12 @@
 import { useAdminStats } from "@/hooks/useAdminStats";
 import { Link } from "@tanstack/react-router";
 import {
+  AlertCircle,
   BookOpen,
   CheckCircle2,
   ClipboardList,
   Clock,
+  RefreshCw,
   Star,
   TrendingUp,
   Users,
@@ -88,7 +90,7 @@ const QUICK_ACTIONS = [
 ];
 
 export default function AdminPanel() {
-  const { data: stats, isLoading } = useAdminStats();
+  const { data: stats, isLoading, error, refetch } = useAdminStats();
 
   // Show skeleton while stats are loading — prevents blank/flickering render
   if (isLoading) {
@@ -109,6 +111,36 @@ export default function AdminPanel() {
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="px-4 py-12 flex flex-col items-center justify-center gap-4 text-center"
+        data-ocid="admin-stats-error"
+      >
+        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+          <AlertCircle className="w-6 h-6 text-destructive" />
+        </div>
+        <div>
+          <p className="font-semibold text-foreground">
+            Could not load admin stats
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Backend connection failed. Please retry.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="btn-primary flex items-center gap-2 text-sm"
+          data-ocid="admin-stats-retry-btn"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Retry
+        </button>
       </div>
     );
   }

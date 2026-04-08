@@ -54,6 +54,16 @@ type Nat__490723111 = Nat__920180692;
 type Nat__920180692 = Nat;
 type Node__46230540<K, V> =
   {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type NotificationId__307495059 = Nat;
+type Notification__766161334 =
+  {
+    bookingId : BookingId__572944220;
+    createdAt : Timestamp__301639476;
+    id : NotificationId__307495059;
+    message : Text;
+    vendorId : Principal
+  };
+type Timestamp__301639476 = Int;
 type UserRole__1054455867 = {#admin; #guest; #user};
 type VendorStatus__682998488 = {#approved; #pending; #rejected};
 type Vendor__717819561 =
@@ -97,6 +107,12 @@ actor {
     };
   stable mobileIndex :
     {var root : Node__46230540<Text, Principal>; var size : Nat__490723111};
+  stable notifications :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Notification__766161334]];
+      var elementIndex : Nat__490723111
+    };
   stable vendors :
     {
       var root : Node__46230540<Principal, Vendor__717819561>;

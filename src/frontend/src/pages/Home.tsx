@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
-import { Car, CheckCircle, MapPin, Shield, Zap } from "lucide-react";
+import { CheckCircle, MapPin, Shield, Zap } from "lucide-react";
 
 const FEATURES = [
   {
     icon: MapPin,
     title: "Smart City Search",
-    desc: "Pickup & drop with instant city suggestions across India",
+    desc: "Pickup & drop with instant city suggestions across Gujarat & India",
   },
   {
     icon: Shield,
@@ -23,18 +23,18 @@ const FEATURES = [
 const STEPS = [
   {
     step: "01",
-    title: "Register",
-    desc: "Submit your company details and documents",
+    title: "Register karein",
+    desc: "Company details aur documents submit karein",
   },
   {
     step: "02",
-    title: "Get Approved",
-    desc: "Admin reviews and activates your account",
+    title: "Approval milega",
+    desc: "Admin review karega aur account activate hoga",
   },
   {
     step: "03",
-    title: "Post Bookings",
-    desc: "Add trips with driver earnings and commission",
+    title: "Booking post karein",
+    desc: "Driver earnings aur commission ke saath trips add karein",
   },
 ];
 
@@ -43,9 +43,13 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-background">
       {/* Hero */}
       <section className="flex-1 flex flex-col items-center justify-center px-5 py-16 text-center bg-gradient-to-b from-card to-background">
-        {/* Logo mark */}
-        <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg mb-6">
-          <Car className="w-10 h-10 text-primary-foreground" />
+        {/* Logo */}
+        <div className="mb-6 flex items-center justify-center">
+          <img
+            src="/assets/images/sarthi-logo.png"
+            alt="Sarthi Vendors"
+            className="w-24 h-24 rounded-full object-cover shadow-lg border-4 border-primary/20"
+          />
         </div>
 
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 border border-primary/20 rounded-full px-3 py-1 mb-4">
@@ -53,14 +57,14 @@ export default function Home() {
           Trusted by 500+ vendors across India
         </span>
 
-        <h1 className="font-display font-bold text-4xl sm:text-5xl text-foreground leading-tight tracking-tight mb-4">
-          Manage your taxi bookings{" "}
-          <span className="text-primary">with ease</span>
+        <h1 className="font-display font-bold text-4xl sm:text-5xl text-foreground leading-tight tracking-tight mb-2">
+          Sarthi Vendors
         </h1>
+        <p className="text-lg text-primary font-semibold mb-4">सारथी कैब वेंडर्स</p>
 
         <p className="text-base text-muted-foreground max-w-sm mb-8 leading-relaxed">
-          KabGo helps cab vendors post trips, track earnings, and manage driver
-          assignments — all from your phone.
+          Cab vendors ke liye booking management platform — trips post karo,
+          earnings track karo, drivers manage karo apne mobile se.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-xs">
@@ -69,7 +73,7 @@ export default function Home() {
               className="btn-primary w-full h-12 text-base font-bold"
               data-ocid="home-signup-btn"
             >
-              Get Started Free
+              Abhi Register Karein
             </Button>
           </Link>
           <Link to="/login" className="w-full">
@@ -78,7 +82,7 @@ export default function Home() {
               className="w-full h-12 text-base font-semibold border-border"
               data-ocid="home-login-btn"
             >
-              Sign In
+              Login Karein
             </Button>
           </Link>
         </div>
@@ -97,7 +101,7 @@ export default function Home() {
       {/* Features */}
       <section className="bg-muted/30 border-t border-border px-5 py-12">
         <h2 className="font-display font-bold text-xl text-foreground text-center mb-8">
-          Everything you need to run your fleet
+          Sab kuch ek jagah
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
           {FEATURES.map(({ icon: Icon, title, desc }) => (
@@ -124,7 +128,7 @@ export default function Home() {
       {/* How it works */}
       <section className="bg-background border-t border-border px-5 py-12">
         <h2 className="font-display font-bold text-xl text-foreground text-center mb-8">
-          How it works
+          Kaise kaam karta hai
         </h2>
         <div className="flex flex-col sm:flex-row items-start gap-6 max-w-2xl mx-auto">
           {STEPS.map(({ step, title, desc }) => (
@@ -150,10 +154,10 @@ export default function Home() {
       {/* CTA banner */}
       <section className="bg-primary px-5 py-10 text-center">
         <h2 className="font-display font-bold text-xl text-primary-foreground mb-2">
-          Ready to grow your cab business?
+          Apna cab business badhao?
         </h2>
         <p className="text-sm text-primary-foreground/80 mb-6">
-          Join hundreds of vendors managing bookings on KabGo
+          Hazaron vendors Sarthi Vendors par bookings manage kar rahe hain
         </p>
         <Link to="/signup">
           <Button
@@ -161,7 +165,7 @@ export default function Home() {
             className="bg-primary-foreground text-primary border-primary-foreground font-bold h-11 px-8 hover:bg-primary-foreground/90"
             data-ocid="home-cta-signup-btn"
           >
-            Create Vendor Account
+            Vendor Account Banao
           </Button>
         </Link>
       </section>

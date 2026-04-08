@@ -10,6 +10,7 @@ import VendorTypes "types/vendor";
 import BookingTypes "types/booking";
 import FacilityTypes "types/facility";
 import CityTypes "types/city";
+import NotifTypes "types/notification";
 import Common "types/common";
 import CityLib "lib/city";
 import VendorMixin "mixins/vendor-api";
@@ -55,13 +56,14 @@ actor {
   let bookings = Map.empty<Common.BookingId, BookingTypes.Booking>();
   let facilities = Map.empty<Common.FacilityId, FacilityTypes.Facility>();
   let cities = List.empty<CityTypes.City>();
+  let notifications = List.empty<NotifTypes.Notification>();
 
   // ── Seed cities on init ───────────────────────────────────────────────────
   CityLib.seedCities(cities);
 
   // ── Domain mixins ─────────────────────────────────────────────────────────
   include VendorMixin(vendors, mobileIndex);
-  include BookingMixin(vendors, bookings);
+  include BookingMixin(vendors, bookings, notifications);
   include FacilityMixin(facilities);
   include CityMixin(cities);
   include StatsMixin(vendors, bookings);

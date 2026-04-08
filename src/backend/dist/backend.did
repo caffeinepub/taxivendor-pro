@@ -48,6 +48,16 @@ type UserApprovalInfo =
    "principal": principal;
    status: ApprovalStatus;
  };
+type Timestamp = int;
+type NotificationId = nat;
+type Notification = 
+ record {
+   bookingId: BookingId;
+   createdAt: Timestamp;
+   id: NotificationId;
+   message: text;
+   vendorId: principal;
+ };
 type FacilityInput = 
  record {
    active: bool;
@@ -162,7 +172,9 @@ service : {
   getBooking: (id: BookingId) -> (opt Booking) query;
   getCallerUserRole: () -> (UserRole) query;
   getDashboardStats: () -> (DashboardStats) query;
+  getLatestNotifications: () -> (vec Notification) query;
   getMyVendorProfile: () -> (opt VendorInfo) query;
+  getVendorNotifications: (vendorId: principal) -> (vec Notification) query;
   getVendorProfile: ("principal": principal) -> (opt VendorInfo) query;
   isCallerAdmin: () -> (bool) query;
   isCallerApproved: () -> (bool) query;

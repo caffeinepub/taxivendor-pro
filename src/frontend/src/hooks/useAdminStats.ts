@@ -3,24 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { createActor } from "../backend";
 import type { AdminStats } from "../types";
 
-const DEFAULT_STATS: AdminStats = {
-  totalVendors: 0,
-  pendingApprovals: 0,
-  totalBookings: 0,
-  activeBookings: 0,
-  totalFacilities: 0,
-};
-
 export function useAdminStats() {
-  const { actor, isFetching } = useActor(createActor);
+  const { actor } = useActor(createActor);
 
   return useQuery<AdminStats>({
     queryKey: ["admin", "stats"],
     queryFn: async (): Promise<AdminStats> => {
-      // Actor not ready — return zeros, don't error
-      if (!actor) return { ...DEFAULT_STATS };
+      if (!actor) throw new Error("Backend not ready");
 
-      // Attempt 1: privileged getDashboardStats
+      // Try privileged getDashboardStats first, fall back to individual calls,
+      // then fall back to safe zeros — admin panel must always load.
       try {
         const [stats, facilities] = await Promise.all([
           actor.getDashboardStats(),
@@ -39,24 +31,12 @@ export function useAdminStats() {
           totalFacilities: facilities.length,
         };
       } catch {
-        // Attempt 2: compute from individual endpoints — each is independently guarded
+        // Attempt 2: compute from individual list endpoints
         try {
           const [vendors, bookings, facilities] = await Promise.all([
-            actor
-              .listAllVendors()
-              .catch(
-                () => [] as Awaited<ReturnType<typeof actor.listAllVendors>>,
-              ),
-            actor
-              .listAllBookings(null)
-              .catch(
-                () => [] as Awaited<ReturnType<typeof actor.listAllBookings>>,
-              ),
-            actor
-              .listFacilities()
-              .catch(
-                () => [] as Awaited<ReturnType<typeof actor.listFacilities>>,
-              ),
+            actor.listAllVendors().catch(() => []),
+            actor.listAllBookings(null).catch(() => []),
+            actor.listFacilities().catch(() => []),
           ]);
 
           const pendingApprovals = vendors.filter(
@@ -75,19 +55,20 @@ export function useAdminStats() {
             totalFacilities: facilities.length,
           };
         } catch {
-          // All backend calls failed — return zeros, never throw
-          return { ...DEFAULT_STATS };
+          // Attempt 3: return safe zeros — dashboard still renders
+          return {
+            totalVendors: 0,
+            pendingApprovals: 0,
+            totalBookings: 0,
+            activeBookings: 0,
+            totalFacilities: 0,
+          };
         }
       }
     },
-    // Only enable once actor is fully ready (not mid-fetch)
-    enabled: !!actor && !isFetching,
-    // Never retry on error — the queryFn itself handles errors gracefully
-    retry: false,
-    // Keep stale data visible while refetching so panel never blanks
+    enabled: !!actor,
+    retry: 0,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
-    // Return default stats on any unhandled error (extra safety net)
-    placeholderData: { ...DEFAULT_STATS },
   });
 }

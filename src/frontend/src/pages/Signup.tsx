@@ -75,6 +75,7 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     if (!validate()) return;
 
     // Both files are guaranteed non-null after validate() passes
@@ -89,11 +90,25 @@ export default function Signup() {
       password: form.password,
     };
 
-    const result = await signup(data, licenceFile, aadhaarFile);
+    let result: { success: boolean; error?: string };
+    try {
+      result = await signup(data, licenceFile, aadhaarFile);
+    } catch {
+      // Safety net — loading state is reset in hook's finally block
+      result = {
+        success: false,
+        error:
+          "Registration failed. Please try again. / Registration fail ho gayi. Dobara try karein.",
+      };
+    }
+
     if (result.success) {
       setSuccess(true);
     } else {
-      setSubmitError(result.error ?? "Signup failed. Please try again.");
+      setSubmitError(
+        result.error ??
+          "Registration failed. Please try again. / Registration fail ho gayi. Dobara try karein.",
+      );
     }
   };
 

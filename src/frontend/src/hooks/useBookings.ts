@@ -1,147 +1,177 @@
 import { useActor } from "@caffeineai/core-infrastructure";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalBlob, createActor } from "../backend";
+import {
+  BookingStatus as BackendBookingStatus,
+  BookingType as BackendBookingType,
+  ExternalBlob,
+  createActor,
+} from "../backend";
+import type { Booking as BackendBooking } from "../backend";
 import type {
   Booking,
   BookingStatus,
+  BookingType,
   CreateBookingData,
   DriverDetails,
 } from "../types";
 
-// Seed data - realistic bookings
-const SEED_BOOKINGS: Booking[] = [
-  {
-    id: "KBG001",
-    vendorId: "v1",
-    vendorName: "Rajesh Kumar",
-    vendorMobile: "9876543210",
-    vendorWhatsapp: "9876543210",
-    bookingType: "one_way",
-    pickupCity: "Mumbai",
-    pickupState: "Maharashtra",
-    dropCity: "Pune",
-    dropState: "Maharashtra",
-    date: "2026-04-10",
-    time: "10:30",
-    driverEarning: 1800,
-    commission: 200,
-    status: "confirmed",
-    driverDetails: {
-      driverName: "Suresh Patil",
-      mobile: "9876501234",
-      car: "Toyota Innova",
-      rcNumber: "MH12AB1234",
-    },
-    createdAt: Date.now() - 86400000,
-  },
-  {
-    id: "KBG002",
-    vendorId: "v1",
-    vendorName: "Rajesh Kumar",
-    vendorMobile: "9876543210",
-    vendorWhatsapp: "9876543210",
-    bookingType: "round_trip",
-    pickupCity: "Delhi",
-    pickupState: "Delhi",
-    dropCity: "Agra",
-    dropState: "Uttar Pradesh",
-    date: "2026-04-12",
-    time: "06:00",
-    driverEarning: 3200,
-    commission: 400,
-    status: "new",
-    createdAt: Date.now() - 3600000,
-  },
-  {
-    id: "KBG003",
-    vendorId: "admin",
-    vendorName: "Admin",
-    vendorMobile: "9999999999",
-    vendorWhatsapp: "9999999999",
-    bookingType: "local",
-    pickupCity: "Bangalore",
-    pickupState: "Karnataka",
-    dropCity: "Bangalore",
-    dropState: "Karnataka",
-    date: "2026-04-08",
-    time: "09:45",
-    driverEarning: 800,
-    commission: 100,
-    status: "completed",
-    driverDetails: {
-      driverName: "Mohan Das",
-      mobile: "9845123456",
-      car: "Maruti Swift",
-      rcNumber: "KA01MN5678",
-    },
-    createdAt: Date.now() - 172800000,
-  },
-];
+// Map backend BookingType enum → frontend BookingType string
+function mapBookingType(bt: BackendBookingType): BookingType {
+  if (bt === BackendBookingType.roundTrip) return "round_trip";
+  if (bt === BackendBookingType.local) return "local";
+  return "one_way";
+}
 
-let mockBookings = [...SEED_BOOKINGS];
+// Map frontend BookingType string → backend BookingType enum
+function toBackendBookingType(bt: BookingType): BackendBookingType {
+  if (bt === "round_trip") return BackendBookingType.roundTrip;
+  if (bt === "local") return BackendBookingType.local;
+  return BackendBookingType.oneWay;
+}
 
+// Map backend BookingStatus enum → frontend BookingStatus string
+function mapBookingStatus(bs: BackendBookingStatus): BookingStatus {
+  if (bs === BackendBookingStatus.confirmed) return "confirmed";
+  if (bs === BackendBookingStatus.completed) return "completed";
+  if (bs === BackendBookingStatus.cancelled) return "cancelled";
+  return "new";
+}
+
+// Map backend BookingStatus string → backend enum
+function toBackendBookingStatus(bs: BookingStatus): BackendBookingStatus {
+  if (bs === "confirmed") return BackendBookingStatus.confirmed;
+  if (bs === "completed") return BackendBookingStatus.completed;
+  if (bs === "cancelled") return BackendBookingStatus.cancelled;
+  return BackendBookingStatus.new_;
+}
+
+// Convert a backend Booking record to the frontend Booking type
+function mapBackendBooking(b: BackendBooking): Booking {
+  return {
+    id: b.id.toString(),
+    vendorId: b.vendorPrincipal.toText(),
+    vendorName: b.submitterName,
+    vendorMobile: b.submitterMobile,
+    vendorWhatsapp: b.submitterWhatsApp,
+    bookingType: mapBookingType(b.bookingType),
+    pickupCity: b.pickupCity,
+    pickupState: b.pickupState,
+    dropCity: b.dropCity,
+    dropState: b.dropState,
+    date: b.date,
+    time: b.time,
+    driverEarning: Number(b.driverEarning),
+    commission: Number(b.commission),
+    status: mapBookingStatus(b.status),
+    driverDetails: b.driverDetails
+      ? {
+          driverName: b.driverDetails.driverName,
+          mobile: b.driverDetails.mobile,
+          car: b.driverDetails.carModel,
+          rcNumber: "",
+          rcBookUrl: b.driverDetails.rcBook.getDirectURL(),
+        }
+      : undefined,
+    createdAt: Number(b.createdAt / 1_000_000n),
+  };
+}
+
+/**
+ * useBookings — lists bookings for a specific vendor or all bookings.
+ * vendorId: the vendor's principal string. If undefined → list all (admin).
+ */
 export function useBookings(vendorId?: string) {
+  const { actor } = useActor(createActor);
+
   return useQuery<Booking[]>({
-    queryKey: ["bookings", vendorId],
+    queryKey: ["bookings", vendorId ?? "all"],
     queryFn: async () => {
-      await new Promise((r) => setTimeout(r, 400));
-      if (vendorId) {
-        return mockBookings.filter((b) => b.vendorId === vendorId);
+      if (!actor) throw new Error("Backend not ready");
+
+      if (vendorId && vendorId !== "admin") {
+        // Fetch bookings for a specific vendor
+        try {
+          const { Principal } = await import("@icp-sdk/core/principal");
+          const principal = Principal.fromText(vendorId);
+          const bookings = await actor.listAllBookings(principal);
+          return bookings.map(mapBackendBooking);
+        } catch {
+          // Fallback: list own bookings
+          const bookings = await actor.listMyBookings();
+          return bookings.map(mapBackendBooking);
+        }
+      } else {
+        // Admin or no filter — list all bookings
+        const bookings = await actor.listAllBookings(null);
+        return bookings.map(mapBackendBooking);
       }
-      return [...mockBookings];
     },
-    enabled: true,
+    enabled: !!actor,
+    retry: 1,
   });
 }
 
 export function useBooking(id: string) {
+  const { actor } = useActor(createActor);
+
   return useQuery<Booking | undefined>({
     queryKey: ["booking", id],
     queryFn: async () => {
-      await new Promise((r) => setTimeout(r, 200));
-      return mockBookings.find((b) => b.id === id);
+      if (!actor) throw new Error("Backend not ready");
+      if (!id) return undefined;
+
+      const numericId = BigInt(id);
+      const booking = await actor.getBooking(numericId);
+      if (!booking) return undefined;
+      return mapBackendBooking(booking);
     },
-    enabled: !!id,
+    enabled: !!actor && !!id,
+    retry: 1,
   });
 }
 
 export function useAllBookings() {
+  const { actor } = useActor(createActor);
+
   return useQuery<Booking[]>({
     queryKey: ["bookings", "all"],
     queryFn: async () => {
-      await new Promise((r) => setTimeout(r, 400));
-      return [...mockBookings];
+      if (!actor) throw new Error("Backend not ready");
+      const bookings = await actor.listAllBookings(null);
+      return bookings.map(mapBackendBooking);
     },
+    enabled: !!actor,
+    retry: 1,
   });
 }
 
 export function useCreateBooking() {
+  const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (
       data: CreateBookingData & { vendorId: string; vendorName: string },
     ) => {
-      await new Promise((r) => setTimeout(r, 600));
-      const booking: Booking = {
-        id: `KBG${String(mockBookings.length + 1).padStart(3, "0")}`,
-        vendorId: data.vendorId,
-        vendorName: data.vendorName,
-        vendorMobile: data.vendorMobile,
-        vendorWhatsapp: data.vendorWhatsapp,
-        bookingType: data.bookingType,
+      if (!actor) throw new Error("Backend not ready");
+
+      const input = {
+        submitterName: data.vendorName,
+        submitterMobile: data.vendorMobile,
+        submitterWhatsApp: data.vendorWhatsapp,
+        bookingType: toBackendBookingType(data.bookingType),
         pickupCity: data.pickupCity,
         pickupState: data.pickupState,
         dropCity: data.dropCity,
         dropState: data.dropState,
         date: data.date,
         time: data.time,
-        driverEarning: data.driverEarning,
-        commission: data.commission,
-        status: "new",
-        createdAt: Date.now(),
+        driverEarning: BigInt(Math.round(data.driverEarning)),
+        commission: BigInt(Math.round(data.commission)),
       };
-      mockBookings.push(booking);
-      return booking;
+
+      const bookingId = await actor.createBooking(input);
+      return { id: bookingId.toString() };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
@@ -150,32 +180,29 @@ export function useCreateBooking() {
 }
 
 export function useUpdateBookingStatus() {
+  const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async ({
       id,
       status,
     }: { id: string; status: BookingStatus }) => {
-      await new Promise((r) => setTimeout(r, 300));
-      const idx = mockBookings.findIndex((b) => b.id === id);
-      if (idx !== -1) {
-        mockBookings[idx] = { ...mockBookings[idx], status };
-      }
-      return mockBookings[idx];
+      if (!actor) throw new Error("Backend not ready");
+      const numericId = BigInt(id);
+      await actor.updateBookingStatus(
+        numericId,
+        toBackendBookingStatus(status),
+      );
+      return { id, status };
     },
-    onSuccess: () => {
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["booking", id] });
     },
   });
 }
 
-/**
- * useUpdateDriverDetails — REAL backend call.
- *
- * Accepts either a File (new upload) or a URL string (already uploaded).
- * Builds the backend DriverDetails record and calls actor.setDriverDetails().
- * Also updates the local mock cache so the UI reflects the change instantly.
- */
 export function useUpdateDriverDetails() {
   const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
@@ -190,49 +217,29 @@ export function useUpdateDriverDetails() {
       details: DriverDetails;
       rcBookFile?: File;
     }) => {
-      // Attempt real backend save if actor is available
-      if (actor) {
-        try {
-          // Build the ExternalBlob for rcBook
-          let rcBlob: ExternalBlob;
-          if (rcBookFile) {
-            // Convert the uploaded File to ExternalBlob bytes
-            const buffer = await rcBookFile.arrayBuffer();
-            rcBlob = ExternalBlob.fromBytes(new Uint8Array(buffer));
-          } else if (details.rcBookUrl) {
-            // Re-use existing URL already stored
-            rcBlob = ExternalBlob.fromURL(details.rcBookUrl);
-          } else {
-            // Fallback: empty placeholder blob so the call still succeeds
-            rcBlob = ExternalBlob.fromBytes(new Uint8Array(0));
-          }
+      if (!actor) throw new Error("Backend not ready");
 
-          // bookingId is a numeric string like "KBG001" in mock context,
-          // but for real bookings from the backend it will be a bigint string.
-          // Try to parse as bigint; if it fails (e.g. "KBG001"), fall back to mock-only.
-          const numericId = BigInt(bookingId.replace(/\D/g, "") || "0");
-
-          await actor.setDriverDetails(numericId, {
-            driverName: details.driverName,
-            mobile: details.mobile,
-            carModel: details.car,
-            rcBook: rcBlob,
-          });
-        } catch (err) {
-          // Backend call failed — log but don't crash; fall through to local update
-          console.warn("setDriverDetails backend call failed:", err);
-        }
+      // Build the ExternalBlob for rcBook
+      let rcBlob: ExternalBlob;
+      if (rcBookFile) {
+        const buffer = await rcBookFile.arrayBuffer();
+        rcBlob = ExternalBlob.fromBytes(new Uint8Array(buffer));
+      } else if (details.rcBookUrl) {
+        rcBlob = ExternalBlob.fromURL(details.rcBookUrl);
+      } else {
+        // No RC book file — use empty placeholder
+        rcBlob = ExternalBlob.fromBytes(new Uint8Array(0));
       }
 
-      // Always update local mock cache so UI reflects changes immediately
-      const idx = mockBookings.findIndex((b) => b.id === bookingId);
-      if (idx !== -1) {
-        mockBookings[idx] = { ...mockBookings[idx], driverDetails: details };
-        return mockBookings[idx];
-      }
+      const numericId = BigInt(bookingId);
+      await actor.setDriverDetails(numericId, {
+        driverName: details.driverName,
+        mobile: details.mobile,
+        carModel: details.car,
+        rcBook: rcBlob,
+      });
 
-      // Booking not in mock — create a minimal updated record
-      return { id: bookingId, driverDetails: details } as Booking;
+      return { bookingId, details };
     },
     onSuccess: (_data, { bookingId }) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });

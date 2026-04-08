@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   BookOpen,
-  Car,
   ClipboardList,
   LayoutDashboard,
   LogOut,
@@ -13,6 +12,8 @@ import {
   Users,
 } from "lucide-react";
 import { useVendorAuth } from "../hooks/useVendorAuth";
+import NotificationBell from "./NotificationBell";
+import ThemeSwitcher from "./ThemeSwitcher";
 
 const VENDOR_NAV = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Home" },
@@ -51,36 +52,42 @@ export default function Layout() {
             to={isLoggedIn ? (isAdmin ? "/admin" : "/dashboard") : "/login"}
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-              <Car className="w-4 h-4 text-primary-foreground" />
-            </div>
+            <img
+              src="/assets/images/sarthi-logo.png"
+              alt="Sarthi Vendors"
+              className="h-9 w-9 rounded-full object-cover flex-shrink-0"
+            />
             <span className="font-display font-bold text-lg text-foreground tracking-tight">
-              KabGo
+              Sarthi Vendors
             </span>
           </Link>
 
-          {isLoggedIn && (
-            <div className="flex items-center gap-2">
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-semibold text-foreground leading-tight">
-                  {session?.name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {session?.companyName}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleLogout}
-                aria-label="Logout"
-                className="text-muted-foreground hover:text-destructive"
-                data-ocid="logout-btn"
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <ThemeSwitcher />
+            {isLoggedIn && <NotificationBell />}
+            {isLoggedIn && (
+              <>
+                <div className="hidden sm:block text-right mr-1">
+                  <p className="text-sm font-semibold text-foreground leading-tight">
+                    {session?.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {session?.companyName}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLogout}
+                  aria-label="Logout"
+                  className="text-muted-foreground hover:text-destructive"
+                  data-ocid="logout-btn"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Admin top nav */}

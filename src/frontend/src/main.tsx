@@ -3,6 +3,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { loadSavedTheme } from "./components/ThemeSwitcher";
+
+// Apply saved theme before React renders to avoid flash
+loadSavedTheme();
 
 BigInt.prototype.toJSON = function () {
   return this.toString();

@@ -92,6 +92,15 @@ export const DashboardStats = IDL.Record({
   'pendingVendors' : IDL.Nat,
   'totalVendors' : IDL.Nat,
 });
+export const NotificationId = IDL.Nat;
+export const Timestamp = IDL.Int;
+export const Notification = IDL.Record({
+  'id' : NotificationId,
+  'bookingId' : BookingId,
+  'createdAt' : Timestamp,
+  'message' : IDL.Text,
+  'vendorId' : IDL.Principal,
+});
 export const VendorStatus = IDL.Variant({
   'pending' : IDL.Null,
   'approved' : IDL.Null,
@@ -173,7 +182,13 @@ export const idlService = IDL.Service({
   'getBooking' : IDL.Func([BookingId], [IDL.Opt(Booking)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getDashboardStats' : IDL.Func([], [DashboardStats], ['query']),
+  'getLatestNotifications' : IDL.Func([], [IDL.Vec(Notification)], ['query']),
   'getMyVendorProfile' : IDL.Func([], [IDL.Opt(VendorInfo)], ['query']),
+  'getVendorNotifications' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Vec(Notification)],
+      ['query'],
+    ),
   'getVendorProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(VendorInfo)],
@@ -292,6 +307,15 @@ export const idlFactory = ({ IDL }) => {
     'pendingVendors' : IDL.Nat,
     'totalVendors' : IDL.Nat,
   });
+  const NotificationId = IDL.Nat;
+  const Timestamp = IDL.Int;
+  const Notification = IDL.Record({
+    'id' : NotificationId,
+    'bookingId' : BookingId,
+    'createdAt' : Timestamp,
+    'message' : IDL.Text,
+    'vendorId' : IDL.Principal,
+  });
   const VendorStatus = IDL.Variant({
     'pending' : IDL.Null,
     'approved' : IDL.Null,
@@ -373,7 +397,13 @@ export const idlFactory = ({ IDL }) => {
     'getBooking' : IDL.Func([BookingId], [IDL.Opt(Booking)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getDashboardStats' : IDL.Func([], [DashboardStats], ['query']),
+    'getLatestNotifications' : IDL.Func([], [IDL.Vec(Notification)], ['query']),
     'getMyVendorProfile' : IDL.Func([], [IDL.Opt(VendorInfo)], ['query']),
+    'getVendorNotifications' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(Notification)],
+        ['query'],
+      ),
     'getVendorProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(VendorInfo)],

@@ -85,6 +85,15 @@ export interface FacilityInput {
   'name' : string,
   'description' : string,
 }
+export interface Notification {
+  'id' : NotificationId,
+  'bookingId' : BookingId,
+  'createdAt' : Timestamp,
+  'message' : string,
+  'vendorId' : Principal,
+}
+export type NotificationId = bigint;
+export type Timestamp = bigint;
 export interface UserApprovalInfo {
   'status' : ApprovalStatus,
   'principal' : Principal,
@@ -152,7 +161,9 @@ export interface _SERVICE {
   'getBooking' : ActorMethod<[BookingId], [] | [Booking]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDashboardStats' : ActorMethod<[], DashboardStats>,
+  'getLatestNotifications' : ActorMethod<[], Array<Notification>>,
   'getMyVendorProfile' : ActorMethod<[], [] | [VendorInfo]>,
+  'getVendorNotifications' : ActorMethod<[Principal], Array<Notification>>,
   'getVendorProfile' : ActorMethod<[Principal], [] | [VendorInfo]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCallerApproved' : ActorMethod<[], boolean>,

@@ -90,6 +90,7 @@ export class ExternalBlob {
     }
 }
 export type BookingId = bigint;
+export type Timestamp = bigint;
 export interface VendorSignupInput {
     name: string;
     drivingLicence: ExternalBlob;
@@ -113,6 +114,12 @@ export interface Facility {
     createdAt: bigint;
     description: string;
 }
+export interface DriverDetails {
+    carModel: string;
+    mobile: string;
+    rcBook: ExternalBlob;
+    driverName: string;
+}
 export interface DashboardStats {
     newBookings: bigint;
     cancelledBookings: bigint;
@@ -122,12 +129,6 @@ export interface DashboardStats {
     completedBookings: bigint;
     pendingVendors: bigint;
     totalVendors: bigint;
-}
-export interface DriverDetails {
-    carModel: string;
-    mobile: string;
-    rcBook: ExternalBlob;
-    driverName: string;
 }
 export interface FacilityInput {
     active: boolean;
@@ -145,6 +146,14 @@ export interface _ImmutableObjectStorageRefillResult {
 export interface City {
     city: string;
     state: string;
+}
+export type NotificationId = bigint;
+export interface Notification {
+    id: NotificationId;
+    bookingId: BookingId;
+    createdAt: Timestamp;
+    message: string;
+    vendorId: Principal;
 }
 export interface Booking {
     id: BookingId;
@@ -226,7 +235,9 @@ export interface backendInterface {
     getBooking(id: BookingId): Promise<Booking | null>;
     getCallerUserRole(): Promise<UserRole>;
     getDashboardStats(): Promise<DashboardStats>;
+    getLatestNotifications(): Promise<Array<Notification>>;
     getMyVendorProfile(): Promise<VendorInfo | null>;
+    getVendorNotifications(vendorId: Principal): Promise<Array<Notification>>;
     getVendorProfile(principal: Principal): Promise<VendorInfo | null>;
     isCallerAdmin(): Promise<boolean>;
     isCallerApproved(): Promise<boolean>;
@@ -458,6 +469,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getLatestNotifications(): Promise<Array<Notification>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLatestNotifications();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLatestNotifications();
+            return result;
+        }
+    }
     async getMyVendorProfile(): Promise<VendorInfo | null> {
         if (this.processError) {
             try {
@@ -470,6 +495,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getMyVendorProfile();
             return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getVendorNotifications(arg0: Principal): Promise<Array<Notification>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getVendorNotifications(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getVendorNotifications(arg0);
+            return result;
         }
     }
     async getVendorProfile(arg0: Principal): Promise<VendorInfo | null> {

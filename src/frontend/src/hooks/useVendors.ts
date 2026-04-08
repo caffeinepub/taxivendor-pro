@@ -1,5 +1,4 @@
 import { useActor } from "@caffeineai/core-infrastructure";
-import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { VendorStatus as BackendVendorStatus, createActor } from "../backend";
 import type { Vendor, VendorStatus } from "../types";
@@ -11,12 +10,12 @@ function mapVendorStatus(status: BackendVendorStatus): VendorStatus {
 }
 
 export function useVendors() {
-  const { actor, isFetching } = useActor(createActor);
+  const { actor } = useActor(createActor);
 
   return useQuery<Vendor[]>({
     queryKey: ["vendors"],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error("Backend not ready");
       const vendors = await actor.listAllVendors();
       return vendors.map((v) => ({
         id: v.principal.toText(),
@@ -31,7 +30,9 @@ export function useVendors() {
         aadhaarDocUrl: v.aadhaarCard.getDirectURL(),
       }));
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor,
+    retry: 2,
+    retryDelay: 1000,
   });
 }
 
@@ -46,9 +47,8 @@ export function useSetVendorStatus() {
     }: { id: string; status: VendorStatus }) => {
       if (!actor) throw new Error("Backend not ready");
 
-      // Convert string principal id to Principal object
       const { Principal } = await import("@icp-sdk/core/principal");
-      const principal: Principal = Principal.fromText(id);
+      const principal = Principal.fromText(id);
 
       let backendStatus: BackendVendorStatus;
       if (status === "approved") backendStatus = BackendVendorStatus.approved;

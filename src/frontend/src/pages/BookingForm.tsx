@@ -133,7 +133,7 @@ export default function BookingForm() {
         </div>
 
         {/* Locations */}
-        <div className="form-card space-y-4">
+        <div className="form-card space-y-5">
           <h2 className="text-sm font-display font-bold text-foreground">
             Route
           </h2>
@@ -163,34 +163,34 @@ export default function BookingForm() {
           />
         </div>
 
-        {/* Date & Time */}
+        {/* Date & Time — stacked on mobile, side-by-side on sm+ */}
         <div className="form-card space-y-4">
           <h2 className="text-sm font-display font-bold text-foreground">
             Schedule
           </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
               <label className="form-label" htmlFor="booking-date">
-                Date
+                Booking Date
               </label>
               <input
                 id="booking-date"
                 type="date"
-                className="form-input"
+                className="form-input w-full"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
                 data-ocid="date-input"
               />
             </div>
-            <div>
+            <div className="flex-1">
               <label className="form-label" htmlFor="booking-time">
-                Time
+                Booking Time
               </label>
               <input
                 id="booking-time"
                 type="time"
-                className="form-input"
+                className="form-input w-full"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 required
@@ -200,24 +200,24 @@ export default function BookingForm() {
           </div>
         </div>
 
-        {/* Financials */}
+        {/* Financials — stacked on mobile, grid on sm+ */}
         <div className="form-card space-y-4">
           <h2 className="text-sm font-display font-bold text-foreground">
             Earnings
           </h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col sm:grid sm:grid-cols-2 gap-4">
             <div>
               <label className="form-label" htmlFor="driver-earning">
-                Driver Earning
+                Driver Earning (₹)
               </label>
               <div className="relative">
-                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
                 <input
                   id="driver-earning"
                   type="number"
                   min="0"
-                  className="form-input pl-9"
-                  placeholder="0"
+                  className="form-input pl-9 w-full"
+                  placeholder="Enter amount"
                   value={driverEarning}
                   onChange={(e) => setDriverEarning(e.target.value)}
                   required
@@ -227,16 +227,16 @@ export default function BookingForm() {
             </div>
             <div>
               <label className="form-label" htmlFor="commission">
-                Commission
+                Commission (₹)
               </label>
               <div className="relative">
-                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none" />
                 <input
                   id="commission"
                   type="number"
                   min="0"
-                  className="form-input pl-9"
-                  placeholder="0"
+                  className="form-input pl-9 w-full"
+                  placeholder="Enter amount"
                   value={commission}
                   onChange={(e) => setCommission(e.target.value)}
                   required
