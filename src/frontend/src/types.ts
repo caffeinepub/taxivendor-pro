@@ -97,6 +97,7 @@ export interface Cab {
   driverMobile: string;
   carModel: string;
   rcBook: string;
+  rcNumber: string;
   createdAt: number;
 }
 

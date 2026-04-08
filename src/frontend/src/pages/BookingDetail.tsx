@@ -113,23 +113,9 @@ export default function BookingDetail() {
       setTimeout(() => setDriverSaved(false), 1500);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      // IC backend "Expected v3 response body" is a Candid decode artefact on
-      // void-returning methods — treat as success, the call completed fine.
-      const isVoidDecodeError =
-        msg.toLowerCase().includes("v3") ||
-        msg.toLowerCase().includes("expected") ||
-        msg.toLowerCase().includes("response body") ||
-        msg.toLowerCase().includes("candid") ||
-        msg.toLowerCase().includes("decode");
-      if (isVoidDecodeError) {
-        setDriverSaved(true);
-        toast.success("Driver details saved successfully!");
-        setTimeout(() => setDriverSaved(false), 1500);
-      } else {
-        setDriverSaving(false);
-        setDriverSaved(false);
-        toast.error("Failed to save driver details. Please try again.");
-      }
+      setDriverSaving(false);
+      setDriverSaved(false);
+      toast.error(msg || "Failed to save driver details. Please try again.");
     } finally {
       setDriverSaving(false);
     }

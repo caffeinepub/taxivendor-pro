@@ -1,10 +1,28 @@
 import Map "mo:core/Map";
-import Storage "mo:caffeineai-object-storage/Storage";
+import List "mo:core/List";
 import NewBookingTypes "types/booking";
-import Common "types/common";
+import NewCabTypes "types/cab";
+import NewCommon "types/common";
+import NewVendorTypes "types/vendor";
+import NewFacilityTypes "types/facility";
+import NewCityTypes "types/city";
+import NewNotifTypes "types/notification";
+import Storage "mo:caffeineai-object-storage/Storage";
 
 module {
-  // ── Old types (copied from .old/src/backend/types/booking.mo) ────────────
+  // ── Old types (inline — from .old/src/backend/types/) ────────────────────
+
+  type OldCabId = Nat;
+  type OldCab = {
+    id : OldCabId;
+    vendorId : Principal;
+    driverName : Text;
+    driverMobile : Text;
+    carModel : Text;
+    rcBook : Text;
+    createdAt : Int;
+  };
+
   type OldBookingType = { #oneWay; #roundTrip; #local };
   type OldBookingStatus = { #new_; #confirmed; #completed; #cancelled };
   type OldDriverDetails = {
@@ -13,9 +31,11 @@ module {
     carModel : Text;
     rcBook : Storage.ExternalBlob;
   };
+
   type OldBooking = {
-    id : Common.BookingId;
+    id : Nat;
     vendorPrincipal : Principal;
+    vendorName : Text;
     bookingType : OldBookingType;
     pickupCity : Text;
     pickupState : Text;
@@ -33,41 +53,64 @@ module {
     createdAt : Int;
   };
 
+  // These types are unchanged; reuse via their new imports directly.
+  // OldVendor, OldFacility, OldCity, OldNotification are identical to new.
+
+  // ── Actor state snapshots ─────────────────────────────────────────────────
+
   type OldActor = {
-    bookings : Map.Map<Common.BookingId, OldBooking>;
+    vendors : Map.Map<Principal, NewVendorTypes.Vendor>;
+    mobileIndex : Map.Map<Text, Principal>;
+    bookings : Map.Map<Nat, OldBooking>;
+    facilities : Map.Map<Nat, NewFacilityTypes.Facility>;
+    cabs : Map.Map<OldCabId, OldCab>;
+    cities : List.List<NewCityTypes.City>;
+    notifications : List.List<NewNotifTypes.Notification>;
+    var nextBookingId : { var value : Nat };
   };
 
   type NewActor = {
-    bookings : Map.Map<Common.BookingId, NewBookingTypes.Booking>;
+    vendors : Map.Map<Principal, NewVendorTypes.Vendor>;
+    mobileIndex : Map.Map<Text, Principal>;
+    bookings : Map.Map<NewCommon.BookingId, NewBookingTypes.Booking>;
+    facilities : Map.Map<NewCommon.FacilityId, NewFacilityTypes.Facility>;
+    cabs : Map.Map<NewCabTypes.CabId, NewCabTypes.Cab>;
+    cities : List.List<NewCityTypes.City>;
+    notifications : List.List<NewNotifTypes.Notification>;
+    var nextBookingId : { var value : Nat };
   };
 
-  /// Upgrade migration: adds vendorName field to all existing bookings.
-  /// Existing bookings get vendorName = "" (unknown at migration time).
+  // ── Migration helpers ─────────────────────────────────────────────────────
+
+  func migrateDriverDetails(old : ?OldDriverDetails) : ?NewBookingTypes.DriverDetails {
+    switch old {
+      case null null;
+      case (?d) ?{ d with rcNumber = "" };
+    };
+  };
+
+  func migrateBooking(id : Nat, old : OldBooking) : NewBookingTypes.Booking {
+    { old with driverDetails = migrateDriverDetails(old.driverDetails) };
+  };
+
+  func migrateCab(_id : OldCabId, old : OldCab) : NewCabTypes.Cab {
+    { old with rcNumber = "" };
+  };
+
+  // ── Public migration entry point ──────────────────────────────────────────
+
   public func run(old : OldActor) : NewActor {
-    let bookings = old.bookings.map<Common.BookingId, OldBooking, NewBookingTypes.Booking>(
-      func(_id, b) {
-        {
-          id = b.id;
-          vendorPrincipal = b.vendorPrincipal;
-          vendorName = "";
-          bookingType = b.bookingType;
-          pickupCity = b.pickupCity;
-          pickupState = b.pickupState;
-          dropCity = b.dropCity;
-          dropState = b.dropState;
-          date = b.date;
-          time = b.time;
-          driverEarning = b.driverEarning;
-          commission = b.commission;
-          submitterName = b.submitterName;
-          submitterWhatsApp = b.submitterWhatsApp;
-          submitterMobile = b.submitterMobile;
-          status = b.status;
-          driverDetails = b.driverDetails;
-          createdAt = b.createdAt;
-        };
-      }
-    );
-    { bookings };
+    let bookings = old.bookings.map<Nat, OldBooking, NewBookingTypes.Booking>(migrateBooking);
+    let cabs = old.cabs.map<OldCabId, OldCab, NewCabTypes.Cab>(migrateCab);
+    {
+      vendors = old.vendors;
+      mobileIndex = old.mobileIndex;
+      bookings;
+      facilities = old.facilities;
+      cabs;
+      cities = old.cities;
+      notifications = old.notifications;
+      var nextBookingId = old.nextBookingId;
+    };
   };
 };

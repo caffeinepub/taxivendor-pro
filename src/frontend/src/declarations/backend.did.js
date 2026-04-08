@@ -56,6 +56,7 @@ export const Cab = IDL.Record({
   'carModel' : IDL.Text,
   'driverMobile' : IDL.Text,
   'createdAt' : IDL.Int,
+  'rcNumber' : IDL.Text,
   'vendorId' : IDL.Principal,
   'rcBook' : IDL.Text,
   'driverName' : IDL.Text,
@@ -69,6 +70,7 @@ export const BookingStatus = IDL.Variant({
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const DriverDetails = IDL.Record({
   'carModel' : IDL.Text,
+  'rcNumber' : IDL.Text,
   'mobile' : IDL.Text,
   'rcBook' : ExternalBlob,
   'driverName' : IDL.Text,
@@ -189,7 +191,7 @@ export const idlService = IDL.Service({
   '_immutableObjectStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControl' : IDL.Func([], [], []),
   'addCab' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
@@ -306,6 +308,7 @@ export const idlFactory = ({ IDL }) => {
     'carModel' : IDL.Text,
     'driverMobile' : IDL.Text,
     'createdAt' : IDL.Int,
+    'rcNumber' : IDL.Text,
     'vendorId' : IDL.Principal,
     'rcBook' : IDL.Text,
     'driverName' : IDL.Text,
@@ -319,6 +322,7 @@ export const idlFactory = ({ IDL }) => {
   const ExternalBlob = IDL.Vec(IDL.Nat8);
   const DriverDetails = IDL.Record({
     'carModel' : IDL.Text,
+    'rcNumber' : IDL.Text,
     'mobile' : IDL.Text,
     'rcBook' : ExternalBlob,
     'driverName' : IDL.Text,
@@ -439,7 +443,7 @@ export const idlFactory = ({ IDL }) => {
     '_immutableObjectStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControl' : IDL.Func([], [], []),
     'addCab' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),

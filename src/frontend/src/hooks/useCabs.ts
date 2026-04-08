@@ -13,6 +13,7 @@ function mapBackendCab(c: BackendCab): Cab {
     carModel: c.carModel,
     // rcBook is a plain string in the backend (RC number or URL)
     rcBook: typeof c.rcBook === "string" ? c.rcBook : "",
+    rcNumber: c.rcNumber ?? "",
     createdAt: Number(c.createdAt / 1_000_000n),
   };
 }
@@ -66,23 +67,19 @@ export function useAddCab() {
       driverMobile: string;
       carModel: string;
       rcBook: string;
+      rcNumber?: string;
     }) => {
       if (!actor) throw new Error("Backend not ready");
-      try {
-        await actor.addCab(
-          data.driverName,
-          data.driverMobile,
-          data.carModel,
-          data.rcBook,
-        );
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        // Treat void decode artefacts as success
-        const isVoidDecodeError =
-          msg.toLowerCase().includes("v3") ||
-          msg.toLowerCase().includes("expected") ||
-          msg.toLowerCase().includes("response body");
-        if (!isVoidDecodeError) throw err;
+      // addCab signature: (driverName, driverMobile, carModel, rcBook, rcNumber)
+      const result = await actor.addCab(
+        data.driverName,
+        data.driverMobile,
+        data.carModel,
+        data.rcBook,
+        data.rcNumber ?? "",
+      );
+      if (result.__kind__ === "err") {
+        throw new Error(result.err);
       }
     },
     onSuccess: () => {

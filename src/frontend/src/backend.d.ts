@@ -21,6 +21,7 @@ export interface Cab {
     carModel: string;
     driverMobile: string;
     createdAt: bigint;
+    rcNumber: string;
     vendorId: Principal;
     rcBook: string;
     driverName: string;
@@ -43,6 +44,7 @@ export interface Facility {
 }
 export interface DriverDetails {
     carModel: string;
+    rcNumber: string;
     mobile: string;
     rcBook: ExternalBlob;
     driverName: string;
@@ -152,7 +154,7 @@ export enum VendorStatus {
     rejected = "rejected"
 }
 export interface backendInterface {
-    addCab(driverName: string, driverMobile: string, carModel: string, rcBook: string): Promise<{
+    addCab(driverName: string, driverMobile: string, carModel: string, rcBook: string, rcNumber: string): Promise<{
         __kind__: "ok";
         ok: string;
     } | {

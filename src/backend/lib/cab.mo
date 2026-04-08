@@ -11,6 +11,7 @@ module {
     driverMobile : Text,
     carModel : Text,
     rcBook : Text,
+    rcNumber : Text,
     now : Int,
   ) : () {
     // Duplicate check: same rcBook for the same vendor
@@ -26,6 +27,7 @@ module {
       driverMobile;
       carModel;
       rcBook;
+      rcNumber;
       createdAt = now;
     };
     cabs.add(id, cab);

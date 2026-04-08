@@ -60,6 +60,7 @@ export interface Cab {
   'carModel' : string,
   'driverMobile' : string,
   'createdAt' : bigint,
+  'rcNumber' : string,
   'vendorId' : Principal,
   'rcBook' : string,
   'driverName' : string,
@@ -78,6 +79,7 @@ export interface DashboardStats {
 }
 export interface DriverDetails {
   'carModel' : string,
+  'rcNumber' : string,
   'mobile' : string,
   'rcBook' : ExternalBlob,
   'driverName' : string,
@@ -172,7 +174,7 @@ export interface _SERVICE {
   '_immutableObjectStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControl' : ActorMethod<[], undefined>,
   'addCab' : ActorMethod<
-    [string, string, string, string],
+    [string, string, string, string, string],
     { 'ok' : string } |
       { 'err' : string }
   >,

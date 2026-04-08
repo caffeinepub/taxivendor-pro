@@ -96,6 +96,7 @@ export interface Cab {
     carModel: string;
     driverMobile: string;
     createdAt: bigint;
+    rcNumber: string;
     vendorId: Principal;
     rcBook: string;
     driverName: string;
@@ -125,6 +126,7 @@ export interface Facility {
 }
 export interface DriverDetails {
     carModel: string;
+    rcNumber: string;
     mobile: string;
     rcBook: ExternalBlob;
     driverName: string;
@@ -245,7 +247,7 @@ export interface backendInterface {
     _immutableObjectStorageRefillCashier(refillInformation: _ImmutableObjectStorageRefillInformation | null): Promise<_ImmutableObjectStorageRefillResult>;
     _immutableObjectStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControl(): Promise<void>;
-    addCab(driverName: string, driverMobile: string, carModel: string, rcBook: string): Promise<{
+    addCab(driverName: string, driverMobile: string, carModel: string, rcBook: string, rcNumber: string): Promise<{
         __kind__: "ok";
         ok: string;
     } | {
@@ -398,7 +400,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async addCab(arg0: string, arg1: string, arg2: string, arg3: string): Promise<{
+    async addCab(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string): Promise<{
         __kind__: "ok";
         ok: string;
     } | {
@@ -407,14 +409,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.addCab(arg0, arg1, arg2, arg3);
+                const result = await this.actor.addCab(arg0, arg1, arg2, arg3, arg4);
                 return from_candid_variant_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.addCab(arg0, arg1, arg2, arg3);
+            const result = await this.actor.addCab(arg0, arg1, arg2, arg3, arg4);
             return from_candid_variant_n8(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -992,17 +994,20 @@ async function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promi
 }
 async function from_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     carModel: string;
+    rcNumber: string;
     mobile: string;
     rcBook: _ExternalBlob;
     driverName: string;
 }): Promise<{
     carModel: string;
+    rcNumber: string;
     mobile: string;
     rcBook: ExternalBlob;
     driverName: string;
 }> {
     return {
         carModel: value.carModel,
+        rcNumber: value.rcNumber,
         mobile: value.mobile,
         rcBook: await from_candid_ExternalBlob_n23(_uploadFile, _downloadFile, value.rcBook),
         driverName: value.driverName
@@ -1217,17 +1222,20 @@ function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 }
 async function to_candid_record_n43(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     carModel: string;
+    rcNumber: string;
     mobile: string;
     rcBook: ExternalBlob;
     driverName: string;
 }): Promise<{
     carModel: string;
+    rcNumber: string;
     mobile: string;
     rcBook: _ExternalBlob;
     driverName: string;
 }> {
     return {
         carModel: value.carModel,
+        rcNumber: value.rcNumber,
         mobile: value.mobile,
         rcBook: await to_candid_ExternalBlob_n44(_uploadFile, _downloadFile, value.rcBook),
         driverName: value.driverName

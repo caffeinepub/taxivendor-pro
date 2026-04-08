@@ -14,8 +14,9 @@ mixin (
     driverMobile : Text,
     carModel : Text,
     rcBook : Text,
+    rcNumber : Text,
   ) : async { #ok : Text; #err : Text } {
-    CabLib.addCab(cabs, caller, driverName, driverMobile, carModel, rcBook, Time.now());
+    CabLib.addCab(cabs, caller, driverName, driverMobile, carModel, rcBook, rcNumber, Time.now());
     #ok("added");
   };
 

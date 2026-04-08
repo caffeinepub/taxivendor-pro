@@ -205,58 +205,33 @@ export function useVendorAuth(): UseVendorAuthReturn {
         if (!backendActor)
           return { success: false, error: "Backend not ready." };
 
-        // vendorSignup returns Promise<void> — the IC agent may throw
-        // "Expected v3 response body" for empty () responses in some versions.
-        // We treat that specific error as a SUCCESS since the canister call
-        // completed; the error is a Candid decode artefact on void returns.
-        try {
-          await backendActor.vendorSignup({
-            name: data.name,
-            mobile: data.mobile,
-            companyName: data.companyName,
-            passwordHash,
-            drivingLicence: licenceBlob,
-            aadhaarCard: aadhaarBlob,
-          });
-        } catch (innerErr) {
-          const innerMsg =
-            innerErr instanceof Error ? innerErr.message : String(innerErr);
-          console.warn("[Signup] Inner error from vendorSignup:", innerMsg);
+        // vendorSignup returns {__kind__: "ok", ok: string} | {__kind__: "err", err: string}
+        // Properly parse the variant response — do NOT treat all errors as success.
+        const result = await backendActor.vendorSignup({
+          name: data.name,
+          mobile: data.mobile,
+          companyName: data.companyName,
+          passwordHash,
+          drivingLicence: licenceBlob,
+          aadhaarCard: aadhaarBlob,
+        });
 
-          // "Expected v3 response body" / "v3" errors are Candid decode artefacts
-          // on void-returning canister methods — treat as success.
-          // Also treat empty-response errors as success.
-          const isVoidDecodeError =
-            innerMsg.toLowerCase().includes("v3") ||
-            innerMsg.toLowerCase().includes("expected") ||
-            innerMsg.toLowerCase().includes("response body") ||
-            innerMsg.toLowerCase().includes("candid") ||
-            innerMsg.toLowerCase().includes("decode");
+        console.log("[Signup] Backend result:", result);
 
-          if (!isVoidDecodeError) {
-            // Real error — check if it's a duplicate registration
-            if (
-              innerMsg.toLowerCase().includes("already") ||
-              innerMsg.toLowerCase().includes("exists") ||
-              innerMsg.toLowerCase().includes("registered")
-            ) {
-              return {
-                success: false,
-                error: "Mobile number already registered. Please login.",
-              };
-            }
-            // Unknown real error — surface it
+        if (result.__kind__ === "err") {
+          const errMsg = result.err;
+          console.warn("[Signup] Backend returned error:", errMsg);
+          if (
+            errMsg.toLowerCase().includes("already") ||
+            errMsg.toLowerCase().includes("exists") ||
+            errMsg.toLowerCase().includes("registered")
+          ) {
             return {
               success: false,
-              error:
-                "Registration failed. Please try again. / Registration fail ho gayi. Dobara try karein.",
+              error: "Mobile number already registered. Please login.",
             };
           }
-          // isVoidDecodeError === true → fall through as success
-          console.log(
-            "[Signup] Void decode artefact — treating as success for:",
-            data.mobile,
-          );
+          return { success: false, error: errMsg };
         }
 
         console.log(

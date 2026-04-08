@@ -1,52 +1,28 @@
-import { useActor } from "@caffeineai/core-infrastructure";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  BookingStatus as BackendBookingStatus,
-  BookingType as BackendBookingType,
-  ExternalBlob,
-  createActor,
-} from "../backend";
-import type { Booking as BackendBooking } from "../backend";
-import type {
-  Booking,
-  BookingStatus,
-  BookingType,
-  CreateBookingData,
-  DriverDetails,
-} from "../types";
-
-// Map backend BookingType enum → frontend BookingType string
-function mapBookingType(bt: BackendBookingType): BookingType {
-  if (bt === BackendBookingType.roundTrip) return "round_trip";
-  if (bt === BackendBookingType.local) return "local";
+import { h as useActor, i as useQuery, k as useQueryClient, l as BookingType, E as ExternalBlob, m as BookingStatus, n as createActor } from "./index-nIM7Hndz.js";
+import { u as useMutation } from "./useMutation-CWf3igRP.js";
+function mapBookingType(bt) {
+  if (bt === BookingType.roundTrip) return "round_trip";
+  if (bt === BookingType.local) return "local";
   return "one_way";
 }
-
-// Map frontend BookingType string → backend BookingType enum
-function toBackendBookingType(bt: BookingType): BackendBookingType {
-  if (bt === "round_trip") return BackendBookingType.roundTrip;
-  if (bt === "local") return BackendBookingType.local;
-  return BackendBookingType.oneWay;
+function toBackendBookingType(bt) {
+  if (bt === "round_trip") return BookingType.roundTrip;
+  if (bt === "local") return BookingType.local;
+  return BookingType.oneWay;
 }
-
-// Map backend BookingStatus enum → frontend BookingStatus string
-function mapBookingStatus(bs: BackendBookingStatus): BookingStatus {
-  if (bs === BackendBookingStatus.confirmed) return "confirmed";
-  if (bs === BackendBookingStatus.completed) return "completed";
-  if (bs === BackendBookingStatus.cancelled) return "cancelled";
+function mapBookingStatus(bs) {
+  if (bs === BookingStatus.confirmed) return "confirmed";
+  if (bs === BookingStatus.completed) return "completed";
+  if (bs === BookingStatus.cancelled) return "cancelled";
   return "new";
 }
-
-// Map backend BookingStatus string → backend enum
-function toBackendBookingStatus(bs: BookingStatus): BackendBookingStatus {
-  if (bs === "confirmed") return BackendBookingStatus.confirmed;
-  if (bs === "completed") return BackendBookingStatus.completed;
-  if (bs === "cancelled") return BackendBookingStatus.cancelled;
-  return BackendBookingStatus.new_;
+function toBackendBookingStatus(bs) {
+  if (bs === "confirmed") return BookingStatus.confirmed;
+  if (bs === "completed") return BookingStatus.completed;
+  if (bs === "cancelled") return BookingStatus.cancelled;
+  return BookingStatus.new_;
 }
-
-// Convert a backend Booking record to the frontend Booking type
-function mapBackendBooking(b: BackendBooking): Booking {
+function mapBackendBooking(b) {
   return {
     id: b.id.toString(),
     vendorId: b.vendorPrincipal.toText(),
@@ -63,34 +39,24 @@ function mapBackendBooking(b: BackendBooking): Booking {
     driverEarning: Number(b.driverEarning),
     commission: Number(b.commission),
     status: mapBookingStatus(b.status),
-    driverDetails: b.driverDetails
-      ? {
-          driverName: b.driverDetails.driverName,
-          mobile: b.driverDetails.mobile,
-          car: b.driverDetails.carModel,
-          // FIX: read rcNumber from backend response instead of hardcoding ""
-          rcNumber: b.driverDetails.rcNumber,
-          rcBookUrl: b.driverDetails.rcBook.getDirectURL(),
-        }
-      : undefined,
-    createdAt: Number(b.createdAt / 1_000_000n),
+    driverDetails: b.driverDetails ? {
+      driverName: b.driverDetails.driverName,
+      mobile: b.driverDetails.mobile,
+      car: b.driverDetails.carModel,
+      // FIX: read rcNumber from backend response instead of hardcoding ""
+      rcNumber: b.driverDetails.rcNumber,
+      rcBookUrl: b.driverDetails.rcBook.getDirectURL()
+    } : void 0,
+    createdAt: Number(b.createdAt / 1000000n)
   };
 }
-
-/**
- * useBookings — lists bookings for a specific vendor or all bookings.
- * vendorId: the vendor's principal string. If undefined → list all (admin).
- */
-export function useBookings(vendorId?: string) {
+function useBookings(vendorId) {
   const { actor } = useActor(createActor);
-
-  return useQuery<Booking[]>({
+  return useQuery({
     queryKey: ["bookings", vendorId ?? "all"],
     queryFn: async () => {
       if (!actor) throw new Error("Backend not ready");
-
       if (vendorId && vendorId !== "admin") {
-        // Fetch bookings for the logged-in vendor using their own actor
         try {
           const bookings = await actor.listMyBookings();
           return bookings.map(mapBackendBooking);
@@ -98,39 +64,33 @@ export function useBookings(vendorId?: string) {
           return [];
         }
       } else {
-        // Admin or no filter — list all bookings
         const bookings = await actor.listAllBookings(null);
         return bookings.map(mapBackendBooking);
       }
     },
     enabled: !!actor,
-    retry: 1,
+    retry: 1
   });
 }
-
-export function useBooking(id: string) {
+function useBooking(id) {
   const { actor } = useActor(createActor);
-
-  return useQuery<Booking | undefined>({
+  return useQuery({
     queryKey: ["booking", id],
     queryFn: async () => {
       if (!actor) throw new Error("Backend not ready");
-      if (!id) return undefined;
-
+      if (!id) return void 0;
       const numericId = BigInt(id);
       const booking = await actor.getBooking(numericId);
-      if (!booking) return undefined;
+      if (!booking) return void 0;
       return mapBackendBooking(booking);
     },
     enabled: !!actor && !!id,
-    retry: 1,
+    retry: 1
   });
 }
-
-export function useAllBookings() {
+function useAllBookings() {
   const { actor } = useActor(createActor);
-
-  return useQuery<Booking[]>({
+  return useQuery({
     queryKey: ["bookings", "all"],
     queryFn: async () => {
       if (!actor) throw new Error("Backend not ready");
@@ -138,20 +98,15 @@ export function useAllBookings() {
       return bookings.map(mapBackendBooking);
     },
     enabled: !!actor,
-    retry: 1,
+    retry: 1
   });
 }
-
-export function useCreateBooking() {
+function useCreateBooking() {
   const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (
-      data: CreateBookingData & { vendorId: string; vendorName: string },
-    ) => {
+    mutationFn: async (data) => {
       if (!actor) throw new Error("Backend not ready");
-
       const input = {
         submitterName: data.vendorName,
         submitterMobile: data.vendorMobile,
@@ -164,28 +119,22 @@ export function useCreateBooking() {
         date: data.date,
         time: data.time,
         driverEarning: BigInt(Math.round(data.driverEarning)),
-        commission: BigInt(Math.round(data.commission)),
+        commission: BigInt(Math.round(data.commission))
       };
-
       const bookingId = await actor.createBooking(input);
       return { id: bookingId.toString() };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-    },
+    }
   });
 }
-
-export function useCreateAdminBooking() {
+function useCreateAdminBooking() {
   const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (
-      data: CreateBookingData & { vendorId: string; vendorName: string },
-    ) => {
+    mutationFn: async (data) => {
       if (!actor) throw new Error("Backend not ready");
-
       const input = {
         submitterName: data.vendorName,
         submitterMobile: data.vendorMobile,
@@ -198,95 +147,72 @@ export function useCreateAdminBooking() {
         date: data.date,
         time: data.time,
         driverEarning: BigInt(Math.round(data.driverEarning)),
-        commission: BigInt(Math.round(data.commission)),
+        commission: BigInt(Math.round(data.commission))
       };
-
-      // If a vendor is selected, use adminCreateBooking
       if (data.vendorId) {
-        const bookingId = await actor.adminCreateBooking(input);
-        return { id: bookingId.toString() };
+        const bookingId2 = await actor.adminCreateBooking(input);
+        return { id: bookingId2.toString() };
       }
-
-      // No vendor — use caller's principal (admin creates on their own behalf)
       const bookingId = await actor.createBooking(input);
       return { id: bookingId.toString() };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-    },
+    }
   });
 }
-
-export function useUpdateBookingStatus() {
+function useUpdateBookingStatus() {
   const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({
       id,
-      status,
-    }: { id: string; status: BookingStatus }) => {
+      status
+    }) => {
       if (!actor) throw new Error("Backend not ready");
       const numericId = BigInt(id);
       await actor.updateBookingStatus(
         numericId,
-        toBackendBookingStatus(status),
+        toBackendBookingStatus(status)
       );
       return { id, status };
     },
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       queryClient.invalidateQueries({ queryKey: ["booking", id] });
-    },
+    }
   });
 }
-
-export function useUpdateDriverDetails() {
+function useUpdateDriverDetails() {
   const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({
       bookingId,
       details,
-      rcBookFile,
-    }: {
-      bookingId: string;
-      details: DriverDetails;
-      rcBookFile?: File;
+      rcBookFile
     }) => {
       if (!actor) throw new Error("Backend not ready");
-
-      // Build the ExternalBlob for rcBook
-      let rcBlob: ExternalBlob;
+      let rcBlob;
       if (rcBookFile) {
         const buffer = await rcBookFile.arrayBuffer();
         rcBlob = ExternalBlob.fromBytes(new Uint8Array(buffer));
       } else if (details.rcBookUrl) {
         rcBlob = ExternalBlob.fromURL(details.rcBookUrl);
       } else {
-        // No RC book file — use empty placeholder
         rcBlob = ExternalBlob.fromBytes(new Uint8Array(0));
       }
-
       const numericId = BigInt(bookingId);
-
-      // Save driver details on the booking.
-      // setDriverDetails returns {__kind__: "ok"|"err"} — check and throw on error.
       const driverResult = await actor.setDriverDetails(numericId, {
         driverName: details.driverName,
         mobile: details.mobile,
         carModel: details.car,
         rcBook: rcBlob,
-        rcNumber: details.rcNumber ?? "",
+        rcNumber: details.rcNumber ?? ""
       });
-
       if (driverResult.__kind__ === "err") {
         throw new Error(driverResult.err);
       }
-
-      // Also add the cab to the vendor's cab list for easy reuse.
-      // addCab signature: (driverName, driverMobile, carModel, rcBook, rcNumber)
       try {
         const rcBookUrl = details.rcBookUrl ?? "";
         await actor.addCab(
@@ -294,18 +220,25 @@ export function useUpdateDriverDetails() {
           details.mobile,
           details.car,
           rcBookUrl,
-          details.rcNumber ?? "",
+          details.rcNumber ?? ""
         );
       } catch {
-        // Non-critical — cab add failure shouldn't block driver details save
       }
-
       return { bookingId, details };
     },
     onSuccess: (_data, { bookingId }) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
       queryClient.invalidateQueries({ queryKey: ["cabs"] });
-    },
+    }
   });
 }
+export {
+  useCreateBooking as a,
+  useBooking as b,
+  useUpdateBookingStatus as c,
+  useUpdateDriverDetails as d,
+  useAllBookings as e,
+  useCreateAdminBooking as f,
+  useBookings as u
+};

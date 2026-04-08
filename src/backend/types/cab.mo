@@ -11,6 +11,7 @@ module {
     driverMobile : Text;
     carModel : Text;
     rcBook : Text;
+    rcNumber : Text;
     createdAt : Int;
   };
 };

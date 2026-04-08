@@ -21,6 +21,7 @@ module {
     mobile : Text;
     carModel : Text;
     rcBook : Storage.ExternalBlob;
+    rcNumber : Text;
   };
 
   /// Full booking record

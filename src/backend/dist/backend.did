@@ -88,6 +88,7 @@ type DriverDetails =
    driverName: text;
    mobile: text;
    rcBook: ExternalBlob;
+   rcNumber: text;
  };
 type DashboardStats = 
  record {
@@ -114,6 +115,7 @@ type Cab =
    driverName: text;
    id: CabId;
    rcBook: text;
+   rcNumber: text;
    vendorId: principal;
  };
 type BookingType = 
@@ -184,10 +186,10 @@ service : {
   _immutableObjectStorageUpdateGatewayPrincipals: () -> ();
   _initializeAccessControl: () -> ();
   addCab: (driverName: text, driverMobile: text, carModel: text, rcBook:
-   text) -> (variant {
-               err: text;
-               ok: text;
-             });
+   text, rcNumber: text) -> (variant {
+                               err: text;
+                               ok: text;
+                             });
   adminCreateBooking: (input: BookingInput) -> (BookingId);
   assignCallerUserRole: (user: principal, role: UserRole) -> ();
   createBooking: (input: BookingInput) -> (BookingId);
