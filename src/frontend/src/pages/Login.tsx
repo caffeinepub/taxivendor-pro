@@ -34,7 +34,7 @@ export default function Login() {
 
   const validate = (): boolean => {
     const next: Partial<FormState> = {};
-    if (!/^[6-9]\d{9}$/.test(form.mobile) && form.mobile !== "7499685759")
+    if (!/^\d{10}$/.test(form.mobile))
       next.mobile = "Enter a valid 10-digit mobile number";
     if (!form.password) next.password = "Password is required";
     setFieldErrors(next);
@@ -192,15 +192,6 @@ export default function Login() {
             )}
           </Button>
         </form>
-
-        {/* Hint for admin */}
-        <div className="mt-5 p-3 bg-muted/40 border border-border rounded-md">
-          <p className="text-xs text-muted-foreground text-center">
-            <span className="font-semibold text-foreground">Admin:</span> use{" "}
-            <span className="font-mono text-foreground">7499685759</span> /{" "}
-            <span className="font-mono text-foreground">123252</span>
-          </p>
-        </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
           New vendor?{" "}

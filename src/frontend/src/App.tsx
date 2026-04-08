@@ -23,6 +23,7 @@ const AdminPanel = lazy(() => import("./pages/admin/AdminPanel"));
 const AdminApplications = lazy(() => import("./pages/admin/AdminApplications"));
 const AdminBookings = lazy(() => import("./pages/admin/AdminBookings"));
 const AdminFacilities = lazy(() => import("./pages/admin/AdminFacilities"));
+const AdminCabs = lazy(() => import("./pages/admin/AdminCabs"));
 
 // Root route
 const rootRoute = createRootRoute({
@@ -241,6 +242,23 @@ const adminFacilitiesRoute = createRoute({
   },
 });
 
+const adminCabsRoute = createRoute({
+  getParentRoute: () => layoutRoute,
+  path: "/admin/cabs",
+  component: () => {
+    const { isLoggedIn, isAdmin, isInitialized } = useVendorAuth();
+    if (!isInitialized)
+      return <div className="min-h-screen bg-background" aria-hidden="true" />;
+    if (!isLoggedIn) return <Navigate to="/login" />;
+    if (!isAdmin) return <Navigate to="/dashboard" />;
+    return (
+      <Suspense fallback={<LoadingSpinner size="lg" fullPage />}>
+        <AdminCabs />
+      </Suspense>
+    );
+  },
+});
+
 const routeTree = rootRoute.addChildren([
   layoutRoute.addChildren([
     indexRoute,
@@ -256,6 +274,7 @@ const routeTree = rootRoute.addChildren([
     adminApplicationsRoute,
     adminBookingsRoute,
     adminFacilitiesRoute,
+    adminCabsRoute,
   ]),
 ]);
 

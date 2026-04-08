@@ -90,6 +90,16 @@ export interface SignupData {
   companyName: string;
 }
 
+export interface Cab {
+  id: string;
+  vendorId: string;
+  driverName: string;
+  driverMobile: string;
+  carModel: string;
+  rcBook: string;
+  createdAt: number;
+}
+
 export interface CreateBookingData {
   bookingType: BookingType;
   pickupCity: string;

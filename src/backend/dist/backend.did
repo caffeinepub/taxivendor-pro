@@ -37,6 +37,14 @@ type VendorInfo =
    "principal": principal;
    status: VendorStatus;
  };
+type VendorBookingStats = 
+ record {
+   cancelledBookings: nat;
+   completedBookings: nat;
+   confirmedBookings: nat;
+   newBookings: nat;
+   totalBookings: nat;
+ };
 type UserRole = 
  variant {
    admin;
@@ -97,6 +105,17 @@ type City =
    city: text;
    state: text;
  };
+type CabId = nat;
+type Cab = 
+ record {
+   carModel: text;
+   createdAt: int;
+   driverMobile: text;
+   driverName: text;
+   id: CabId;
+   rcBook: text;
+   vendorId: principal;
+ };
 type BookingType = 
  variant {
    local;
@@ -144,6 +163,7 @@ type Booking =
    submitterName: text;
    submitterWhatsApp: text;
    time: text;
+   vendorName: text;
    vendorPrincipal: principal;
  };
 type ApprovalStatus = 
@@ -163,17 +183,26 @@ service : {
    (_ImmutableObjectStorageRefillResult);
   _immutableObjectStorageUpdateGatewayPrincipals: () -> ();
   _initializeAccessControl: () -> ();
-  adminCreateBooking: (vendorPrincipal: principal, input: BookingInput) ->
-   (BookingId);
+  addCab: (driverName: text, driverMobile: text, carModel: text, rcBook:
+   text) -> (variant {
+               err: text;
+               ok: text;
+             });
+  adminCreateBooking: (input: BookingInput) -> (BookingId);
   assignCallerUserRole: (user: principal, role: UserRole) -> ();
   createBooking: (input: BookingInput) -> (BookingId);
   createFacility: (input: FacilityInput) -> (FacilityId);
   deleteFacility: (id: FacilityId) -> ();
+  getAllCabs: () -> (vec Cab) query;
   getBooking: (id: BookingId) -> (opt Booking) query;
   getCallerUserRole: () -> (UserRole) query;
   getDashboardStats: () -> (DashboardStats) query;
   getLatestNotifications: () -> (vec Notification) query;
+  getMyBookingStats: () -> (VendorBookingStats) query;
   getMyVendorProfile: () -> (opt VendorInfo) query;
+  getVendorBookingStats: (vendorPrincipal: principal) ->
+   (VendorBookingStats) query;
+  getVendorCabs: () -> (vec Cab) query;
   getVendorNotifications: (vendorId: principal) -> (vec Notification) query;
   getVendorProfile: ("principal": principal) -> (opt VendorInfo) query;
   isCallerAdmin: () -> (bool) query;
@@ -186,10 +215,17 @@ service : {
   requestApproval: () -> ();
   searchCities: (prefix: text) -> (vec City) query;
   setApproval: (user: principal, status: ApprovalStatus) -> ();
-  setDriverDetails: (id: BookingId, details: DriverDetails) -> ();
+  setDriverDetails: (id: BookingId, details: DriverDetails) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
   setVendorStatus: ("principal": principal, status: VendorStatus) -> ();
   updateBookingStatus: (id: BookingId, status: BookingStatus) -> ();
   updateFacility: (id: FacilityId, input: FacilityInput) -> ();
   vendorLogin: (mobile: text, passwordHash: text) -> (opt principal) query;
-  vendorSignup: (input: VendorSignupInput) -> ();
+  vendorSignup: (input: VendorSignupInput) -> (variant {
+                                                 err: text;
+                                                 ok: text;
+                                               });
 }

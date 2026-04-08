@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   BookOpen,
+  Car,
   ClipboardList,
   LayoutDashboard,
   LogOut,
@@ -26,6 +27,7 @@ const ADMIN_NAV = [
   { to: "/admin/applications", icon: Users, label: "Vendors" },
   { to: "/admin/bookings", icon: ClipboardList, label: "Bookings" },
   { to: "/admin/facilities", icon: Star, label: "Facilities" },
+  { to: "/admin/cabs", icon: Car, label: "Cabs" },
 ];
 
 export default function Layout() {

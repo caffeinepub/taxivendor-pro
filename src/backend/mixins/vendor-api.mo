@@ -8,8 +8,9 @@ mixin (
   vendors : Map.Map<Principal, VendorTypes.Vendor>,
   mobileIndex : Map.Map<Text, Principal>,
 ) {
-  /// Register a new vendor account (open to anyone)
-  public shared ({ caller }) func vendorSignup(input : VendorTypes.VendorSignupInput) : async () {
+  /// Register a new vendor account.
+  /// Returns #ok("registered") or #err(reason) — never traps, so frontend always gets a parseable response.
+  public shared ({ caller }) func vendorSignup(input : VendorTypes.VendorSignupInput) : async { #ok : Text; #err : Text } {
     VendorLib.signup(vendors, mobileIndex, caller, input, Time.now());
   };
 

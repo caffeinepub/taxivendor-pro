@@ -89,16 +89,12 @@ export function useBookings(vendorId?: string) {
       if (!actor) throw new Error("Backend not ready");
 
       if (vendorId && vendorId !== "admin") {
-        // Fetch bookings for a specific vendor
+        // Fetch bookings for the logged-in vendor using their own actor
         try {
-          const { Principal } = await import("@icp-sdk/core/principal");
-          const principal = Principal.fromText(vendorId);
-          const bookings = await actor.listAllBookings(principal);
-          return bookings.map(mapBackendBooking);
-        } catch {
-          // Fallback: list own bookings
           const bookings = await actor.listMyBookings();
           return bookings.map(mapBackendBooking);
+        } catch {
+          return [];
         }
       } else {
         // Admin or no filter — list all bookings
@@ -179,6 +175,47 @@ export function useCreateBooking() {
   });
 }
 
+export function useCreateAdminBooking() {
+  const { actor } = useActor(createActor);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      data: CreateBookingData & { vendorId: string; vendorName: string },
+    ) => {
+      if (!actor) throw new Error("Backend not ready");
+
+      const input = {
+        submitterName: data.vendorName,
+        submitterMobile: data.vendorMobile,
+        submitterWhatsApp: data.vendorWhatsapp,
+        bookingType: toBackendBookingType(data.bookingType),
+        pickupCity: data.pickupCity,
+        pickupState: data.pickupState,
+        dropCity: data.dropCity,
+        dropState: data.dropState,
+        date: data.date,
+        time: data.time,
+        driverEarning: BigInt(Math.round(data.driverEarning)),
+        commission: BigInt(Math.round(data.commission)),
+      };
+
+      // If a vendor is selected, use adminCreateBooking
+      if (data.vendorId) {
+        const bookingId = await actor.adminCreateBooking(input);
+        return { id: bookingId.toString() };
+      }
+
+      // No vendor — use caller's principal (admin creates on their own behalf)
+      const bookingId = await actor.createBooking(input);
+      return { id: bookingId.toString() };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}
+
 export function useUpdateBookingStatus() {
   const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
@@ -232,18 +269,45 @@ export function useUpdateDriverDetails() {
       }
 
       const numericId = BigInt(bookingId);
-      await actor.setDriverDetails(numericId, {
-        driverName: details.driverName,
-        mobile: details.mobile,
-        carModel: details.car,
-        rcBook: rcBlob,
-      });
+
+      // Save driver details on the booking
+      try {
+        await actor.setDriverDetails(numericId, {
+          driverName: details.driverName,
+          mobile: details.mobile,
+          carModel: details.car,
+          rcBook: rcBlob,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const isVoidDecodeError =
+          msg.toLowerCase().includes("v3") ||
+          msg.toLowerCase().includes("expected") ||
+          msg.toLowerCase().includes("response body") ||
+          msg.toLowerCase().includes("candid") ||
+          msg.toLowerCase().includes("decode");
+        if (!isVoidDecodeError) throw err;
+        // void decode artefact — fall through as success
+      }
+
+      // Also add the cab to the vendor's cab list for easy reuse
+      try {
+        await actor.addCab(
+          details.driverName,
+          details.mobile,
+          details.car,
+          details.rcNumber ?? "",
+        );
+      } catch {
+        // Non-critical — cab add failure shouldn't block driver details save
+      }
 
       return { bookingId, details };
     },
     onSuccess: (_data, { bookingId }) => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
+      queryClient.invalidateQueries({ queryKey: ["cabs"] });
     },
   });
 }

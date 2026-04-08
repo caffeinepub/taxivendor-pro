@@ -13,4 +13,14 @@ mixin (
   public query func getDashboardStats() : async StatsLib.DashboardStats {
     StatsLib.getDashboardStats(vendors, bookings);
   };
+
+  /// Get booking stats for the calling vendor (total + per-status counts)
+  public query ({ caller }) func getMyBookingStats() : async StatsLib.VendorBookingStats {
+    StatsLib.getVendorBookingStats(bookings, caller);
+  };
+
+  /// Get booking stats for a specific vendor principal (admin use)
+  public query func getVendorBookingStats(vendorPrincipal : Principal) : async StatsLib.VendorBookingStats {
+    StatsLib.getVendorBookingStats(bookings, vendorPrincipal);
+  };
 };

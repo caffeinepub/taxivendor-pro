@@ -2,10 +2,12 @@ import ErrorMessage from "@/components/ErrorMessage";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { useAllBookings } from "@/hooks/useBookings";
 import { useSetVendorStatus, useVendors } from "@/hooks/useVendors";
 import type { Vendor, VendorStatus } from "@/types";
 import {
   AlertTriangle,
+  BookOpen,
   Building2,
   Phone,
   Search,
@@ -97,10 +99,11 @@ function ConfirmDialog({
 
 interface VendorCardProps {
   vendor: Vendor;
+  bookingCount: number;
   onAction: (vendor: Vendor, action: "approve" | "reject") => void;
 }
 
-function VendorCard({ vendor, onAction }: VendorCardProps) {
+function VendorCard({ vendor, bookingCount, onAction }: VendorCardProps) {
   return (
     <div
       className="form-card space-y-3 table-row-alt"
@@ -118,7 +121,13 @@ function VendorCard({ vendor, onAction }: VendorCardProps) {
             </p>
           </div>
         </div>
-        <StatusBadge status={vendor.status} />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-sm bg-primary/10 text-primary">
+            <BookOpen className="w-3 h-3" />
+            <span className="text-xs font-bold">{bookingCount}</span>
+          </div>
+          <StatusBadge status={vendor.status} />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-xs">
@@ -179,6 +188,7 @@ function VendorCard({ vendor, onAction }: VendorCardProps) {
 
 export default function AdminApplications() {
   const { data: vendors = [], isLoading, error, refetch } = useVendors();
+  const { data: allBookings = [] } = useAllBookings();
   const setStatus = useSetVendorStatus();
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [search, setSearch] = useState("");
@@ -186,6 +196,12 @@ export default function AdminApplications() {
     vendor: Vendor;
     action: "approve" | "reject";
   } | null>(null);
+
+  // Build a map of vendorId → booking count
+  const bookingCountMap = new Map<string, number>();
+  for (const b of allBookings) {
+    bookingCountMap.set(b.vendorId, (bookingCountMap.get(b.vendorId) ?? 0) + 1);
+  }
 
   const filtered = vendors.filter((v) => {
     const matchStatus = filter === "all" || v.status === filter;
@@ -313,6 +329,7 @@ export default function AdminApplications() {
             <VendorCard
               key={vendor.id}
               vendor={vendor}
+              bookingCount={bookingCountMap.get(vendor.id) ?? 0}
               onAction={handleAction}
             />
           ))}

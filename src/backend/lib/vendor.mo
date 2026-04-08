@@ -4,19 +4,20 @@ import Runtime "mo:core/Runtime";
 import Types "../types/vendor";
 
 module {
-  /// Register a new vendor (status = pending)
+  /// Register a new vendor (status = pending).
+  /// Returns #ok("registered") on success, #err(reason) on failure.
   public func signup(
     vendors : Map.Map<Principal, Types.Vendor>,
     mobileIndex : Map.Map<Text, Principal>,
     caller : Principal,
     input : Types.VendorSignupInput,
     now : Int,
-  ) : () {
+  ) : { #ok : Text; #err : Text } {
     if (mobileIndex.get(input.mobile) != null) {
-      Runtime.trap("Mobile number already registered");
+      return #err("Mobile number already registered");
     };
     if (vendors.get(caller) != null) {
-      Runtime.trap("Vendor already registered with this identity");
+      return #err("Vendor already registered with this identity");
     };
     let vendor : Types.Vendor = {
       principal = caller;
@@ -31,6 +32,7 @@ module {
     };
     vendors.add(caller, vendor);
     mobileIndex.add(input.mobile, caller);
+    #ok("registered");
   };
 
   /// Authenticate vendor: check mobile+password, return principal if approved

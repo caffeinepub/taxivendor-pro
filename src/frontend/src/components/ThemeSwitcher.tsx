@@ -64,7 +64,12 @@ export function loadSavedTheme() {
   applyTheme(saved);
 }
 
-export default function ThemeSwitcher() {
+interface ThemeSwitcherProps {
+  /** When true, shows theme swatches inline (expanded mode for admin panel) */
+  showLabel?: boolean;
+}
+
+export default function ThemeSwitcher({ showLabel }: ThemeSwitcherProps) {
   const [activeTheme, setActiveTheme] = useState<string>(
     () => localStorage.getItem(STORAGE_KEY) ?? "saffron",
   );
@@ -90,6 +95,43 @@ export default function ThemeSwitcher() {
     setOpen(false);
   };
 
+  // Inline expanded view — used in admin panel
+  if (showLabel) {
+    return (
+      <div className="flex flex-wrap gap-3" data-ocid="theme-inline-picker">
+        {APP_THEMES.map((theme) => (
+          <button
+            key={theme.id}
+            type="button"
+            onClick={() => handleSelect(theme.id)}
+            aria-label={`${theme.name} theme`}
+            data-ocid={`theme-inline-${theme.id}`}
+            className="flex flex-col items-center gap-1.5 group"
+          >
+            <span
+              className="w-9 h-9 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1 block"
+              style={{
+                backgroundColor: theme.previewColor,
+                borderColor:
+                  activeTheme === theme.id ? theme.previewColor : "transparent",
+                boxShadow:
+                  activeTheme === theme.id
+                    ? `0 0 0 2px white, 0 0 0 4px ${theme.previewColor}`
+                    : "none",
+              }}
+            />
+            <span
+              className={`text-xs font-medium transition-colors ${activeTheme === theme.id ? "text-foreground" : "text-muted-foreground"}`}
+            >
+              {theme.name}
+            </span>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  // Compact header button with popup
   return (
     <div ref={containerRef} className="relative">
       <button

@@ -1,4 +1,4 @@
-// Version: 1.0.0
+// Version: 3.0.0
 type ApprovalStatus__575141016 = {#approved; #pending; #rejected};
 type BookingId__572944220 = Nat;
 type BookingStatus__10176221 = {#cancelled; #completed; #confirmed; #new_};
@@ -21,7 +21,19 @@ type Booking__628731632 =
     submitterName : Text;
     submitterWhatsApp : Text;
     time : Text;
+    vendorName : Text;
     vendorPrincipal : Principal
+  };
+type CabId__220684078 = Nat;
+type Cab__186885234 =
+  {
+    carModel : Text;
+    createdAt : Int;
+    driverMobile : Text;
+    driverName : Text;
+    id : CabId__220684078;
+    rcBook : Text;
+    vendorId : Principal
   };
 type City__262248838 = {city : Text; state : Text};
 type Data__791452850<K, V> =
@@ -63,6 +75,36 @@ type Notification__766161334 =
     message : Text;
     vendorId : Principal
   };
+type OldBookingStatus__846941108 =
+  {#cancelled; #completed; #confirmed; #new_};
+type OldBookingType__98299409 = {#local; #oneWay; #roundTrip};
+type OldBooking__221110599 =
+  {
+    bookingType : OldBookingType__98299409;
+    commission : Nat;
+    createdAt : Int;
+    date : Text;
+    driverDetails : ?OldDriverDetails__153991706;
+    driverEarning : Nat;
+    dropCity : Text;
+    dropState : Text;
+    id : BookingId__572944220;
+    pickupCity : Text;
+    pickupState : Text;
+    status : OldBookingStatus__846941108;
+    submitterMobile : Text;
+    submitterName : Text;
+    submitterWhatsApp : Text;
+    time : Text;
+    vendorPrincipal : Principal
+  };
+type OldDriverDetails__153991706 =
+  {
+    carModel : Text;
+    driverName : Text;
+    mobile : Text;
+    rcBook : ExternalBlob__246066408
+  };
 type Timestamp__301639476 = Int;
 type UserRole__1054455867 = {#admin; #guest; #user};
 type VendorStatus__682998488 = {#approved; #pending; #rejected};
@@ -78,7 +120,7 @@ type Vendor__717819561 =
     principal : Principal;
     status : VendorStatus__682998488
   };
-actor {
+actor ({
   stable accessControlState :
     {
       var adminAssigned : Bool;
@@ -89,9 +131,10 @@ actor {
       var approvalStatus :
         Map__605269027<Principal, ApprovalStatus__575141016>
     };
-  stable bookings :
+  in bookings : Map__605269027<BookingId__572944220, OldBooking__221110599>;
+  stable cabs :
     {
-      var root : Node__46230540<BookingId__572944220, Booking__628731632>;
+      var root : Node__46230540<CabId__220684078, Cab__186885234>;
       var size : Nat__490723111
     };
   stable cities :
@@ -107,6 +150,7 @@ actor {
     };
   stable mobileIndex :
     {var root : Node__46230540<Text, Principal>; var size : Nat__490723111};
+  stable var nextBookingId : {var value : Nat};
   stable notifications :
     {
       var blockIndex : Nat__490723111;
@@ -118,4 +162,50 @@ actor {
       var root : Node__46230540<Principal, Vendor__717819561>;
       var size : Nat__490723111
     }
-};
+}, {
+  stable accessControlState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__605269027<Principal, UserRole__1054455867>
+    };
+  stable approvalState :
+    {
+      var approvalStatus :
+        Map__605269027<Principal, ApprovalStatus__575141016>
+    };
+  stable bookings :
+    {
+      var root : Node__46230540<BookingId__572944220, Booking__628731632>;
+      var size : Nat__490723111
+    };
+  stable cabs :
+    {
+      var root : Node__46230540<CabId__220684078, Cab__186885234>;
+      var size : Nat__490723111
+    };
+  stable cities :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?City__262248838]];
+      var elementIndex : Nat__490723111
+    };
+  stable facilities :
+    {
+      var root : Node__46230540<FacilityId__881446275, Facility__501326557>;
+      var size : Nat__490723111
+    };
+  stable mobileIndex :
+    {var root : Node__46230540<Text, Principal>; var size : Nat__490723111};
+  stable var nextBookingId : {var value : Nat};
+  stable notifications :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Notification__766161334]];
+      var elementIndex : Nat__490723111
+    };
+  stable vendors :
+    {
+      var root : Node__46230540<Principal, Vendor__717819561>;
+      var size : Nat__490723111
+    }
+}) ;

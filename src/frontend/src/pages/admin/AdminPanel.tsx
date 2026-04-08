@@ -1,8 +1,10 @@
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import { Link } from "@tanstack/react-router";
 import {
   AlertCircle,
   BookOpen,
+  Car,
   CheckCircle2,
   ClipboardList,
   Clock,
@@ -86,6 +88,13 @@ const QUICK_ACTIONS = [
     label: "Facilities",
     desc: "Add or update service offerings",
     accent: "accent" as const,
+  },
+  {
+    href: "/admin/cabs",
+    icon: Car,
+    label: "All Cabs",
+    desc: "View all cabs with vendor ownership",
+    accent: "primary" as const,
   },
 ];
 
@@ -268,6 +277,17 @@ export default function AdminPanel() {
             );
           })}
         </div>
+      </div>
+
+      {/* Theme Customization */}
+      <div className="form-card space-y-3" data-ocid="admin-theme-section">
+        <h2 className="font-display text-base font-semibold text-foreground">
+          App Theme
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          Choose a color theme for the entire app.
+        </p>
+        <ThemeSwitcher showLabel />
       </div>
     </div>
   );

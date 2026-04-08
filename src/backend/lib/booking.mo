@@ -10,6 +10,7 @@ module {
     bookings : Map.Map<Common.BookingId, Types.Booking>,
     nextId : Nat,
     vendorPrincipal : Principal,
+    vendorName : Text,
     input : Types.BookingInput,
     now : Int,
   ) : Common.BookingId {
@@ -17,6 +18,7 @@ module {
     let booking : Types.Booking = {
       id;
       vendorPrincipal;
+      vendorName;
       bookingType = input.bookingType;
       pickupCity = input.pickupCity;
       pickupState = input.pickupState;
@@ -86,7 +88,7 @@ module {
     };
   };
 
-  /// Set or update driver details for a booking
+  /// Set or update driver details for a booking — also auto-confirms the booking
   public func setDriverDetails(
     bookings : Map.Map<Common.BookingId, Types.Booking>,
     id : Common.BookingId,
@@ -95,7 +97,8 @@ module {
     switch (bookings.get(id)) {
       case null Runtime.trap("Booking not found");
       case (?b) {
-        bookings.add(id, { b with driverDetails = ?details });
+        // Save driver details AND auto-confirm the booking in one update
+        bookings.add(id, { b with driverDetails = ?details; status = #confirmed });
       };
     };
   };

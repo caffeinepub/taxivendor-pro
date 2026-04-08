@@ -3,6 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
   BookOpen,
+  Car,
   CheckCircle,
   Clock,
   Plus,
@@ -15,6 +16,7 @@ import ErrorMessage from "../components/ErrorMessage";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatusBadge from "../components/StatusBadge";
 import { useBookings } from "../hooks/useBookings";
+import { useVendorCabs } from "../hooks/useCabs";
 import { useNotifications } from "../hooks/useNotifications";
 import { useVendorAuth } from "../hooks/useVendorAuth";
 import type { BookingType } from "../types";
@@ -35,6 +37,7 @@ export default function Dashboard() {
   const { session } = useVendorAuth();
   const navigate = useNavigate();
   const { data: bookings, isLoading, error } = useBookings(session?.id);
+  const { data: cabs, isLoading: cabsLoading } = useVendorCabs();
   const { permission, requestPermission, isSupported } = useNotifications();
   const [notifBannerDismissed, setNotifBannerDismissed] = useState(
     () => localStorage.getItem("notif_banner_dismissed") === "1",
@@ -42,6 +45,8 @@ export default function Dashboard() {
 
   const total = bookings?.length ?? 0;
   const pending = bookings?.filter((b) => b.status === "new").length ?? 0;
+  const confirmed =
+    bookings?.filter((b) => b.status === "confirmed").length ?? 0;
   const completed =
     bookings?.filter((b) => b.status === "completed").length ?? 0;
   const recent =
@@ -59,6 +64,13 @@ export default function Dashboard() {
       bg: "bg-primary/10",
     },
     {
+      label: "Confirmed",
+      value: confirmed,
+      icon: CheckCircle,
+      color: "text-accent",
+      bg: "bg-accent/15",
+    },
+    {
       label: "Pending",
       value: pending,
       icon: Clock,
@@ -68,9 +80,9 @@ export default function Dashboard() {
     {
       label: "Done",
       value: completed,
-      icon: CheckCircle,
-      color: "text-accent",
-      bg: "bg-accent/15",
+      icon: TrendingUp,
+      color: "text-primary",
+      bg: "bg-primary/10",
     },
   ];
 
@@ -155,7 +167,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3" data-ocid="stats-row">
+      <div className="grid grid-cols-2 gap-3" data-ocid="stats-row">
         {stats.map((s) => (
           <div
             key={s.label}
@@ -235,6 +247,11 @@ export default function Dashboard() {
                     >
                       {BOOKING_TYPE_LABELS[booking.bookingType]}
                     </span>
+                    {booking.vendorName === "Admin" && (
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-sm flex-shrink-0 bg-destructive/10 text-destructive">
+                        Admin
+                      </span>
+                    )}
                     <span className="text-xs text-muted-foreground font-mono truncate">
                       #{booking.id}
                     </span>
@@ -270,6 +287,64 @@ export default function Dashboard() {
                   </div>
                 </div>
               </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* My Cabs */}
+      <div data-ocid="my-cabs-section">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-display font-bold text-foreground">
+            My Cabs
+          </h2>
+        </div>
+
+        {cabsLoading && <LoadingSpinner size="sm" />}
+
+        {!cabsLoading && (!cabs || cabs.length === 0) && (
+          <div
+            className="form-card flex flex-col items-center py-6 gap-2 text-center"
+            data-ocid="empty-cabs"
+          >
+            <Car className="w-9 h-9 text-muted-foreground/40" />
+            <p className="text-sm font-semibold text-foreground">
+              No saved cabs yet
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Cab details will appear here after you add a driver to a booking.
+            </p>
+          </div>
+        )}
+
+        {!cabsLoading && cabs && cabs.length > 0 && (
+          <div className="space-y-2" data-ocid="cabs-list">
+            {cabs.map((cab) => (
+              <div
+                key={cab.id}
+                className="form-card flex items-start gap-3"
+                data-ocid={`cab-card-${cab.id}`}
+              >
+                <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Car className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {cab.carModel}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    Driver: {cab.driverName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    📞 {cab.driverMobile}
+                  </p>
+                  {cab.rcBook && (
+                    <p className="text-xs text-muted-foreground truncate">
+                      RC: {cab.rcBook}
+                    </p>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}

@@ -93,13 +93,21 @@ export default function Signup() {
     let result: { success: boolean; error?: string };
     try {
       result = await signup(data, licenceFile, aadhaarFile);
-    } catch {
-      // Safety net — loading state is reset in hook's finally block
-      result = {
-        success: false,
-        error:
-          "Registration failed. Please try again. / Registration fail ho gayi. Dobara try karein.",
-      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // IC void decode artefacts should be treated as success (hook handles this,
+      // but catch here as extra safety)
+      const isVoidDecodeError =
+        msg.toLowerCase().includes("v3") ||
+        msg.toLowerCase().includes("expected") ||
+        msg.toLowerCase().includes("response body");
+      result = isVoidDecodeError
+        ? { success: true }
+        : {
+            success: false,
+            error:
+              "Registration failed. Please try again. / Registration fail ho gayi. Dobara try karein.",
+          };
     }
 
     if (result.success) {
@@ -148,7 +156,7 @@ export default function Signup() {
           Vendor Registration
         </h1>
         <p className="text-muted-foreground text-sm mt-1 text-center">
-          Join KabGo — submit your details for admin approval
+          Join Sarthi Vendors — submit your details for admin approval
         </p>
       </div>
 

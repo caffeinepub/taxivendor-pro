@@ -5,7 +5,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import {
   useAllBookings,
-  useCreateBooking,
+  useCreateAdminBooking,
   useUpdateBookingStatus,
 } from "@/hooks/useBookings";
 import { useVendors } from "@/hooks/useVendors";
@@ -47,7 +47,7 @@ interface CreateBookingModalProps {
 
 function CreateBookingModal({ onClose }: CreateBookingModalProps) {
   const { data: vendors = [] } = useVendors();
-  const createBooking = useCreateBooking();
+  const createAdminBooking = useCreateAdminBooking();
 
   const [vendorId, setVendorId] = useState("");
   const [form, setForm] = useState<CreateBookingData>({
@@ -72,19 +72,15 @@ function CreateBookingModal({ onClose }: CreateBookingModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedVendor) {
-      toast.error("Please select a vendor");
-      return;
-    }
     if (!form.pickupCity || !form.dropCity || !form.date || !form.time) {
       toast.error("Please fill all required fields");
       return;
     }
-    createBooking.mutate(
+    createAdminBooking.mutate(
       {
         ...form,
-        vendorId: selectedVendor.id,
-        vendorName: selectedVendor.name,
+        vendorId: selectedVendor?.id ?? "",
+        vendorName: selectedVendor?.name ?? "Admin",
       },
       {
         onSuccess: () => {
@@ -118,10 +114,13 @@ function CreateBookingModal({ onClose }: CreateBookingModalProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {/* Vendor */}
+          {/* Vendor (optional) */}
           <div>
             <label className="form-label" htmlFor="admin-booking-vendor">
-              Vendor *
+              Vendor{" "}
+              <span className="text-muted-foreground font-normal">
+                (optional — leave blank to mark as Admin booking)
+              </span>
             </label>
             <select
               id="admin-booking-vendor"
@@ -135,10 +134,9 @@ function CreateBookingModal({ onClose }: CreateBookingModalProps) {
                   set("vendorWhatsapp", v.mobile);
                 }
               }}
-              required
               data-ocid="admin-booking-vendor-select"
             >
-              <option value="">Select vendor...</option>
+              <option value="">Admin (no vendor)</option>
               {approvedVendors.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.name} — {v.companyName}
@@ -296,10 +294,10 @@ function CreateBookingModal({ onClose }: CreateBookingModalProps) {
           <button
             type="submit"
             className="btn-primary w-full mt-2 disabled:opacity-60"
-            disabled={createBooking.isPending}
+            disabled={createAdminBooking.isPending}
             data-ocid="admin-create-booking-submit"
           >
-            {createBooking.isPending ? "Creating..." : "Create Booking"}
+            {createAdminBooking.isPending ? "Creating..." : "Create Booking"}
           </button>
         </form>
       </div>
@@ -334,6 +332,11 @@ function BookingRow({
             <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground font-medium">
               {BOOKING_TYPE_LABELS[booking.bookingType]}
             </span>
+            {booking.vendorName === "Admin" && (
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-destructive/10 text-destructive">
+                Admin
+              </span>
+            )}
           </div>
           <p className="text-sm font-semibold text-foreground mt-1">
             {booking.vendorName}

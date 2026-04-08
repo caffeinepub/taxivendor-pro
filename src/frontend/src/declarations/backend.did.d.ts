@@ -30,6 +30,7 @@ export interface Booking {
   'driverEarning' : bigint,
   'bookingType' : BookingType,
   'dropState' : string,
+  'vendorName' : string,
   'dropCity' : string,
 }
 export type BookingId = bigint;
@@ -54,6 +55,16 @@ export type BookingStatus = { 'new' : null } |
 export type BookingType = { 'local' : null } |
   { 'roundTrip' : null } |
   { 'oneWay' : null };
+export interface Cab {
+  'id' : CabId,
+  'carModel' : string,
+  'driverMobile' : string,
+  'createdAt' : bigint,
+  'vendorId' : Principal,
+  'rcBook' : string,
+  'driverName' : string,
+}
+export type CabId = bigint;
 export interface City { 'city' : string, 'state' : string }
 export interface DashboardStats {
   'newBookings' : bigint,
@@ -101,6 +112,13 @@ export interface UserApprovalInfo {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface VendorBookingStats {
+  'newBookings' : bigint,
+  'cancelledBookings' : bigint,
+  'totalBookings' : bigint,
+  'confirmedBookings' : bigint,
+  'completedBookings' : bigint,
+}
 export interface VendorInfo {
   'status' : VendorStatus,
   'principal' : Principal,
@@ -153,16 +171,25 @@ export interface _SERVICE {
   >,
   '_immutableObjectStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControl' : ActorMethod<[], undefined>,
-  'adminCreateBooking' : ActorMethod<[Principal, BookingInput], BookingId>,
+  'addCab' : ActorMethod<
+    [string, string, string, string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
+  'adminCreateBooking' : ActorMethod<[BookingInput], BookingId>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createBooking' : ActorMethod<[BookingInput], BookingId>,
   'createFacility' : ActorMethod<[FacilityInput], FacilityId>,
   'deleteFacility' : ActorMethod<[FacilityId], undefined>,
+  'getAllCabs' : ActorMethod<[], Array<Cab>>,
   'getBooking' : ActorMethod<[BookingId], [] | [Booking]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDashboardStats' : ActorMethod<[], DashboardStats>,
   'getLatestNotifications' : ActorMethod<[], Array<Notification>>,
+  'getMyBookingStats' : ActorMethod<[], VendorBookingStats>,
   'getMyVendorProfile' : ActorMethod<[], [] | [VendorInfo]>,
+  'getVendorBookingStats' : ActorMethod<[Principal], VendorBookingStats>,
+  'getVendorCabs' : ActorMethod<[], Array<Cab>>,
   'getVendorNotifications' : ActorMethod<[Principal], Array<Notification>>,
   'getVendorProfile' : ActorMethod<[Principal], [] | [VendorInfo]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
@@ -175,12 +202,20 @@ export interface _SERVICE {
   'requestApproval' : ActorMethod<[], undefined>,
   'searchCities' : ActorMethod<[string], Array<City>>,
   'setApproval' : ActorMethod<[Principal, ApprovalStatus], undefined>,
-  'setDriverDetails' : ActorMethod<[BookingId, DriverDetails], undefined>,
+  'setDriverDetails' : ActorMethod<
+    [BookingId, DriverDetails],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'setVendorStatus' : ActorMethod<[Principal, VendorStatus], undefined>,
   'updateBookingStatus' : ActorMethod<[BookingId, BookingStatus], undefined>,
   'updateFacility' : ActorMethod<[FacilityId, FacilityInput], undefined>,
   'vendorLogin' : ActorMethod<[string, string], [] | [Principal]>,
-  'vendorSignup' : ActorMethod<[VendorSignupInput], undefined>,
+  'vendorSignup' : ActorMethod<
+    [VendorSignupInput],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

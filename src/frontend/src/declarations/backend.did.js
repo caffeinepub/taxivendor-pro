@@ -50,6 +50,16 @@ export const FacilityInput = IDL.Record({
   'description' : IDL.Text,
 });
 export const FacilityId = IDL.Nat;
+export const CabId = IDL.Nat;
+export const Cab = IDL.Record({
+  'id' : CabId,
+  'carModel' : IDL.Text,
+  'driverMobile' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'vendorId' : IDL.Principal,
+  'rcBook' : IDL.Text,
+  'driverName' : IDL.Text,
+});
 export const BookingStatus = IDL.Variant({
   'new' : IDL.Null,
   'cancelled' : IDL.Null,
@@ -80,6 +90,7 @@ export const Booking = IDL.Record({
   'driverEarning' : IDL.Nat,
   'bookingType' : BookingType,
   'dropState' : IDL.Text,
+  'vendorName' : IDL.Text,
   'dropCity' : IDL.Text,
 });
 export const DashboardStats = IDL.Record({
@@ -100,6 +111,13 @@ export const Notification = IDL.Record({
   'createdAt' : Timestamp,
   'message' : IDL.Text,
   'vendorId' : IDL.Principal,
+});
+export const VendorBookingStats = IDL.Record({
+  'newBookings' : IDL.Nat,
+  'cancelledBookings' : IDL.Nat,
+  'totalBookings' : IDL.Nat,
+  'confirmedBookings' : IDL.Nat,
+  'completedBookings' : IDL.Nat,
 });
 export const VendorStatus = IDL.Variant({
   'pending' : IDL.Null,
@@ -170,20 +188,29 @@ export const idlService = IDL.Service({
     ),
   '_immutableObjectStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControl' : IDL.Func([], [], []),
-  'adminCreateBooking' : IDL.Func(
-      [IDL.Principal, BookingInput],
-      [BookingId],
+  'addCab' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
+  'adminCreateBooking' : IDL.Func([BookingInput], [BookingId], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createBooking' : IDL.Func([BookingInput], [BookingId], []),
   'createFacility' : IDL.Func([FacilityInput], [FacilityId], []),
   'deleteFacility' : IDL.Func([FacilityId], [], []),
+  'getAllCabs' : IDL.Func([], [IDL.Vec(Cab)], ['query']),
   'getBooking' : IDL.Func([BookingId], [IDL.Opt(Booking)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getDashboardStats' : IDL.Func([], [DashboardStats], ['query']),
   'getLatestNotifications' : IDL.Func([], [IDL.Vec(Notification)], ['query']),
+  'getMyBookingStats' : IDL.Func([], [VendorBookingStats], ['query']),
   'getMyVendorProfile' : IDL.Func([], [IDL.Opt(VendorInfo)], ['query']),
+  'getVendorBookingStats' : IDL.Func(
+      [IDL.Principal],
+      [VendorBookingStats],
+      ['query'],
+    ),
+  'getVendorCabs' : IDL.Func([], [IDL.Vec(Cab)], ['query']),
   'getVendorNotifications' : IDL.Func(
       [IDL.Principal],
       [IDL.Vec(Notification)],
@@ -208,7 +235,11 @@ export const idlService = IDL.Service({
   'requestApproval' : IDL.Func([], [], []),
   'searchCities' : IDL.Func([IDL.Text], [IDL.Vec(City)], ['query']),
   'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
-  'setDriverDetails' : IDL.Func([BookingId, DriverDetails], [], []),
+  'setDriverDetails' : IDL.Func(
+      [BookingId, DriverDetails],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'setVendorStatus' : IDL.Func([IDL.Principal, VendorStatus], [], []),
   'updateBookingStatus' : IDL.Func([BookingId, BookingStatus], [], []),
   'updateFacility' : IDL.Func([FacilityId, FacilityInput], [], []),
@@ -217,7 +248,11 @@ export const idlService = IDL.Service({
       [IDL.Opt(IDL.Principal)],
       ['query'],
     ),
-  'vendorSignup' : IDL.Func([VendorSignupInput], [], []),
+  'vendorSignup' : IDL.Func(
+      [VendorSignupInput],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -265,6 +300,16 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Text,
   });
   const FacilityId = IDL.Nat;
+  const CabId = IDL.Nat;
+  const Cab = IDL.Record({
+    'id' : CabId,
+    'carModel' : IDL.Text,
+    'driverMobile' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'vendorId' : IDL.Principal,
+    'rcBook' : IDL.Text,
+    'driverName' : IDL.Text,
+  });
   const BookingStatus = IDL.Variant({
     'new' : IDL.Null,
     'cancelled' : IDL.Null,
@@ -295,6 +340,7 @@ export const idlFactory = ({ IDL }) => {
     'driverEarning' : IDL.Nat,
     'bookingType' : BookingType,
     'dropState' : IDL.Text,
+    'vendorName' : IDL.Text,
     'dropCity' : IDL.Text,
   });
   const DashboardStats = IDL.Record({
@@ -315,6 +361,13 @@ export const idlFactory = ({ IDL }) => {
     'createdAt' : Timestamp,
     'message' : IDL.Text,
     'vendorId' : IDL.Principal,
+  });
+  const VendorBookingStats = IDL.Record({
+    'newBookings' : IDL.Nat,
+    'cancelledBookings' : IDL.Nat,
+    'totalBookings' : IDL.Nat,
+    'confirmedBookings' : IDL.Nat,
+    'completedBookings' : IDL.Nat,
   });
   const VendorStatus = IDL.Variant({
     'pending' : IDL.Null,
@@ -385,20 +438,29 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_immutableObjectStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControl' : IDL.Func([], [], []),
-    'adminCreateBooking' : IDL.Func(
-        [IDL.Principal, BookingInput],
-        [BookingId],
+    'addCab' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
+    'adminCreateBooking' : IDL.Func([BookingInput], [BookingId], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createBooking' : IDL.Func([BookingInput], [BookingId], []),
     'createFacility' : IDL.Func([FacilityInput], [FacilityId], []),
     'deleteFacility' : IDL.Func([FacilityId], [], []),
+    'getAllCabs' : IDL.Func([], [IDL.Vec(Cab)], ['query']),
     'getBooking' : IDL.Func([BookingId], [IDL.Opt(Booking)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getDashboardStats' : IDL.Func([], [DashboardStats], ['query']),
     'getLatestNotifications' : IDL.Func([], [IDL.Vec(Notification)], ['query']),
+    'getMyBookingStats' : IDL.Func([], [VendorBookingStats], ['query']),
     'getMyVendorProfile' : IDL.Func([], [IDL.Opt(VendorInfo)], ['query']),
+    'getVendorBookingStats' : IDL.Func(
+        [IDL.Principal],
+        [VendorBookingStats],
+        ['query'],
+      ),
+    'getVendorCabs' : IDL.Func([], [IDL.Vec(Cab)], ['query']),
     'getVendorNotifications' : IDL.Func(
         [IDL.Principal],
         [IDL.Vec(Notification)],
@@ -423,7 +485,11 @@ export const idlFactory = ({ IDL }) => {
     'requestApproval' : IDL.Func([], [], []),
     'searchCities' : IDL.Func([IDL.Text], [IDL.Vec(City)], ['query']),
     'setApproval' : IDL.Func([IDL.Principal, ApprovalStatus], [], []),
-    'setDriverDetails' : IDL.Func([BookingId, DriverDetails], [], []),
+    'setDriverDetails' : IDL.Func(
+        [BookingId, DriverDetails],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'setVendorStatus' : IDL.Func([IDL.Principal, VendorStatus], [], []),
     'updateBookingStatus' : IDL.Func([BookingId, BookingStatus], [], []),
     'updateFacility' : IDL.Func([FacilityId, FacilityInput], [], []),
@@ -432,7 +498,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(IDL.Principal)],
         ['query'],
       ),
-    'vendorSignup' : IDL.Func([VendorSignupInput], [], []),
+    'vendorSignup' : IDL.Func(
+        [VendorSignupInput],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
   });
 };
 

@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, IndianRupee } from "lucide-react";
+import { ArrowLeft, Car, IndianRupee } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import CityAutocomplete from "../components/CityAutocomplete";
 import ErrorMessage from "../components/ErrorMessage";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useCreateBooking } from "../hooks/useBookings";
+import { useVendorCabs } from "../hooks/useCabs";
 import { useFacilities } from "../hooks/useFacilities";
 import { useVendorAuth } from "../hooks/useVendorAuth";
 import type { BookingType } from "../types";
@@ -22,6 +23,7 @@ export default function BookingForm() {
   const navigate = useNavigate();
   const createBooking = useCreateBooking();
   const { data: facilities, isLoading: facilitiesLoading } = useFacilities();
+  const { data: savedCabs } = useVendorCabs();
 
   const [bookingType, setBookingType] = useState<BookingType>("one_way");
   const [pickupCity, setPickupCity] = useState("");
@@ -107,6 +109,51 @@ export default function BookingForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Saved Cab Quick-fill */}
+        {savedCabs && savedCabs.length > 0 && (
+          <div className="form-card space-y-3" data-ocid="saved-cabs-section">
+            <div className="flex items-center gap-2">
+              <Car className="w-4 h-4 text-primary" />
+              <p className="text-sm font-display font-bold text-foreground">
+                Saved Cabs
+              </p>
+            </div>
+            <select
+              className="form-input w-full"
+              defaultValue=""
+              onChange={(e) => {
+                const cab = savedCabs.find((c) => c.id === e.target.value);
+                if (!cab) return;
+                // Store selected cab id in sessionStorage for BookingDetail driver autofill
+                sessionStorage.setItem(
+                  "autofill_cab",
+                  JSON.stringify({
+                    driverName: cab.driverName,
+                    driverMobile: cab.driverMobile,
+                    carModel: cab.carModel,
+                    rcBook: cab.rcBook,
+                  }),
+                );
+                toast.success(
+                  `Cab "${cab.carModel}" details will auto-fill on driver entry.`,
+                );
+              }}
+              data-ocid="saved-cab-select"
+            >
+              <option value="">-- Select a saved cab --</option>
+              {savedCabs.map((cab) => (
+                <option key={cab.id} value={cab.id}>
+                  {cab.carModel} — {cab.driverName}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              Selecting a cab will auto-fill driver details after booking is
+              created.
+            </p>
+          </div>
+        )}
+
         {/* Booking Type */}
         <div className="form-card space-y-3">
           <p className="form-label">Booking Type</p>

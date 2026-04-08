@@ -27,6 +27,8 @@ module {
   public type Booking = {
     id : Common.BookingId;
     vendorPrincipal : Principal;
+    /// Display name for the booking source — vendor's company name, or "Admin" for admin-created bookings
+    vendorName : Text;
     bookingType : BookingType;
     pickupCity : Text;
     pickupState : Text;

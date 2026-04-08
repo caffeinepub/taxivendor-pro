@@ -58,11 +58,7 @@ export default function CityAutocomplete({
     if (val !== value) {
       onChange(val, "");
     }
-    if (val.length >= 3) {
-      setOpen(true);
-    } else {
-      setOpen(false);
-    }
+    setOpen(val.length >= 3);
   };
 
   return (
@@ -70,12 +66,14 @@ export default function CityAutocomplete({
       <label className="form-label" htmlFor={id}>
         {label}
       </label>
-      <div className="relative flex items-center">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary flex-shrink-0 pointer-events-none z-10" />
+
+      {/* Input wrapper */}
+      <div className="relative">
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary pointer-events-none z-10 flex-shrink-0" />
         <input
           id={id}
           type="text"
-          className="form-input pl-9 pr-9 min-w-0 w-full"
+          className="form-input pl-9 pr-8 w-full"
           placeholder={placeholder}
           value={query}
           onChange={handleInputChange}
@@ -85,21 +83,26 @@ export default function CityAutocomplete({
         />
         <ChevronDown
           className={cn(
-            "absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none transition-transform flex-shrink-0",
+            "absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none transition-transform",
             open && "rotate-180",
           )}
         />
       </div>
 
+      {/* Selected state label */}
       {state && (
         <p className="text-xs text-primary mt-1 pl-1 font-medium">{state}</p>
       )}
 
+      {/* Dropdown */}
       {open && (
-        <div className="absolute z-[9999] top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-elevated overflow-hidden max-h-60 overflow-y-auto">
+        <div
+          className="absolute z-[9999] top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-elevated overflow-hidden"
+          style={{ maxHeight: "240px", overflowY: "auto" }}
+        >
           {isLoading ? (
             <div className="px-4 py-3 text-sm text-muted-foreground flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              <span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin flex-shrink-0" />
               Dhundh raha hai...
             </div>
           ) : results.length === 0 ? (
@@ -111,15 +114,20 @@ export default function CityAutocomplete({
               <button
                 key={city.id}
                 type="button"
-                className="w-full flex flex-col items-start px-4 py-2.5 hover:bg-muted/50 transition-colors text-left border-b border-border/30 last:border-0"
+                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50 transition-colors text-left border-b border-border/30 last:border-0"
                 onClick={() => handleSelect(city)}
               >
-                <span className="text-sm font-bold text-foreground leading-tight">
-                  {city.name}
-                </span>
-                <span className="text-xs text-muted-foreground mt-0.5">
-                  {city.state}
-                </span>
+                {/* Icon — fixed size, no overlap */}
+                <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                {/* Text — takes remaining space */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-foreground leading-tight truncate">
+                    {city.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                    {city.state}
+                  </p>
+                </div>
               </button>
             ))
           )}
