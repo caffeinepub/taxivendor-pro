@@ -1,4 +1,4 @@
-// Version: 3.0.0
+// Version: 1.0.0
 type ApprovalStatus__575141016 = {#approved; #pending; #rejected};
 type BookingId__572944220 = Nat;
 type BookingStatus__10176221 = {#cancelled; #completed; #confirmed; #new_};
@@ -60,13 +60,6 @@ type Facility__501326557 =
 type Internal__8484328<K, V> =
   {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
 type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
-type List__415060402<T> = List__790383201<T>;
-type List__790383201<T> =
-  {
-    var blockIndex : Nat__490723111;
-    var blocks : [var [var ?T]];
-    var elementIndex : Nat__490723111
-  };
 type Map__158565046<K, V> = Map__297112838<K, V>;
 type Map__297112838<K, V> =
   {var root : Node__46230540<K, V>; var size : Nat__490723111};
@@ -84,48 +77,6 @@ type Notification__766161334 =
     message : Text;
     vendorId : Principal
   };
-type OldBookingStatus__846941108 =
-  {#cancelled; #completed; #confirmed; #new_};
-type OldBookingType__98299409 = {#local; #oneWay; #roundTrip};
-type OldBooking__221110599 =
-  {
-    bookingType : OldBookingType__98299409;
-    commission : Nat;
-    createdAt : Int;
-    date : Text;
-    driverDetails : ?OldDriverDetails__153991706;
-    driverEarning : Nat;
-    dropCity : Text;
-    dropState : Text;
-    id : Nat;
-    pickupCity : Text;
-    pickupState : Text;
-    status : OldBookingStatus__846941108;
-    submitterMobile : Text;
-    submitterName : Text;
-    submitterWhatsApp : Text;
-    time : Text;
-    vendorName : Text;
-    vendorPrincipal : Principal
-  };
-type OldCabId__12888246 = Nat;
-type OldCab__12239776 =
-  {
-    carModel : Text;
-    createdAt : Int;
-    driverMobile : Text;
-    driverName : Text;
-    id : OldCabId__12888246;
-    rcBook : Text;
-    vendorId : Principal
-  };
-type OldDriverDetails__153991706 =
-  {
-    carModel : Text;
-    driverName : Text;
-    mobile : Text;
-    rcBook : ExternalBlob__246066408
-  };
 type Timestamp__301639476 = Int;
 type UserRole__1054455867 = {#admin; #guest; #user};
 type VendorStatus__682998488 = {#approved; #pending; #rejected};
@@ -141,26 +92,7 @@ type Vendor__717819561 =
     principal : Principal;
     status : VendorStatus__682998488
   };
-actor ({
-  stable accessControlState :
-    {
-      var adminAssigned : Bool;
-      userRoles : Map__605269027<Principal, UserRole__1054455867>
-    };
-  stable approvalState :
-    {
-      var approvalStatus :
-        Map__605269027<Principal, ApprovalStatus__575141016>
-    };
-  in bookings : Map__605269027<Nat, OldBooking__221110599>;
-  in cabs : Map__605269027<OldCabId__12888246, OldCab__12239776>;
-  in cities : List__415060402<City__262248838>;
-  in facilities : Map__605269027<Nat, Facility__501326557>;
-  in mobileIndex : Map__605269027<Text, Principal>;
-  in var nextBookingId : {var value : Nat};
-  in notifications : List__415060402<Notification__766161334>;
-  in vendors : Map__605269027<Principal, Vendor__717819561>
-}, {
+actor {
   stable accessControlState :
     {
       var adminAssigned : Bool;
@@ -194,7 +126,7 @@ actor ({
     };
   stable mobileIndex :
     {var root : Node__46230540<Text, Principal>; var size : Nat__490723111};
-  stable var nextBookingId : {var value : Nat};
+  stable nextBookingId : {var value : Nat};
   stable notifications :
     {
       var blockIndex : Nat__490723111;
@@ -206,4 +138,4 @@ actor ({
       var root : Node__46230540<Principal, Vendor__717819561>;
       var size : Nat__490723111
     }
-}) ;
+};

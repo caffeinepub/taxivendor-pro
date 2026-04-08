@@ -3,7 +3,7 @@ import Principal "mo:core/Principal";
 import CabTypes "../types/cab";
 
 module {
-  /// Add a cab for a vendor, skipping duplicates by rcBook+vendorId pair
+  /// Add a cab for a vendor, skipping duplicates by rcNumber+vendorId pair
   public func addCab(
     cabs : Map.Map<CabTypes.CabId, CabTypes.Cab>,
     vendorId : Principal,
@@ -14,9 +14,9 @@ module {
     rcNumber : Text,
     now : Int,
   ) : () {
-    // Duplicate check: same rcBook for the same vendor
+    // Duplicate check: same RC number for the same vendor (rcNumber is the unique vehicle identifier)
     let isDuplicate = cabs.values().any(func(c : CabTypes.Cab) : Bool {
-      c.rcBook == rcBook and c.vendorId == vendorId
+      c.rcNumber == rcNumber and c.vendorId == vendorId
     });
     if (isDuplicate) return;
     let id = cabs.size();

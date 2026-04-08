@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Car, IndianRupee } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Car, IndianRupee, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import CityAutocomplete from "../components/CityAutocomplete";
 import ErrorMessage from "../components/ErrorMessage";
@@ -23,7 +23,20 @@ export default function BookingForm() {
   const navigate = useNavigate();
   const createBooking = useCreateBooking();
   const { data: facilities, isLoading: facilitiesLoading } = useFacilities();
-  const { data: savedCabs } = useVendorCabs();
+  const {
+    data: savedCabs,
+    refetch: refetchCabs,
+    isFetching: cabsFetching,
+  } = useVendorCabs();
+
+  // On mount, force-refetch cabs after a short delay to ensure actor is ready
+  // This fixes the bug where BookingForm mounts before actor is initialized
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      refetchCabs();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [refetchCabs]);
 
   const [bookingType, setBookingType] = useState<BookingType>("one_way");
   const [pickupCity, setPickupCity] = useState("");
@@ -110,49 +123,80 @@ export default function BookingForm() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Saved Cab Quick-fill */}
-        {savedCabs && savedCabs.length > 0 && (
-          <div className="form-card space-y-3" data-ocid="saved-cabs-section">
+        <div className="form-card space-y-3" data-ocid="saved-cabs-section">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Car className="w-4 h-4 text-primary" />
               <p className="text-sm font-display font-bold text-foreground">
                 Saved Cabs
               </p>
             </div>
-            <select
-              className="form-input w-full"
-              defaultValue=""
-              onChange={(e) => {
-                const cab = savedCabs.find((c) => c.id === e.target.value);
-                if (!cab) return;
-                // Store selected cab id in sessionStorage for BookingDetail driver autofill
-                sessionStorage.setItem(
-                  "autofill_cab",
-                  JSON.stringify({
-                    driverName: cab.driverName,
-                    driverMobile: cab.driverMobile,
-                    carModel: cab.carModel,
-                    rcBook: cab.rcBook,
-                  }),
-                );
-                toast.success(
-                  `Cab "${cab.carModel}" details will auto-fill on driver entry.`,
-                );
-              }}
-              data-ocid="saved-cab-select"
+            <button
+              type="button"
+              onClick={() => refetchCabs()}
+              disabled={cabsFetching}
+              className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+              aria-label="Refresh cab list"
+              data-ocid="refresh-cabs-btn"
             >
-              <option value="">-- Select a saved cab --</option>
-              {savedCabs.map((cab) => (
-                <option key={cab.id} value={cab.id}>
-                  {cab.carModel} — {cab.driverName}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-muted-foreground">
-              Selecting a cab will auto-fill driver details after booking is
-              created.
-            </p>
+              <RefreshCw
+                className={`w-3 h-3 ${cabsFetching ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </button>
           </div>
-        )}
+          {savedCabs && savedCabs.length > 0 ? (
+            <>
+              <select
+                className="form-input w-full"
+                defaultValue=""
+                onChange={(e) => {
+                  const cab = savedCabs.find((c) => c.id === e.target.value);
+                  if (!cab) return;
+                  // Store selected cab id in sessionStorage for BookingDetail driver autofill
+                  sessionStorage.setItem(
+                    "autofill_cab",
+                    JSON.stringify({
+                      driverName: cab.driverName,
+                      driverMobile: cab.driverMobile,
+                      carModel: cab.carModel,
+                      rcBook: cab.rcBook,
+                      rcNumber: cab.rcNumber,
+                    }),
+                  );
+                  toast.success(
+                    `Cab "${cab.carModel}" details will auto-fill on driver entry.`,
+                  );
+                }}
+                data-ocid="saved-cab-select"
+              >
+                <option value="">-- Select a saved cab --</option>
+                {savedCabs.map((cab) => (
+                  <option key={cab.id} value={cab.id}>
+                    {cab.carModel} — {cab.driverName}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Selecting a cab will auto-fill driver details after booking is
+                created.
+              </p>
+            </>
+          ) : (
+            <p
+              className="text-xs text-muted-foreground py-1"
+              data-ocid="no-cabs-msg"
+            >
+              No saved cabs yet. Cabs appear here after you complete a booking
+              with driver details.
+              <br />
+              <span className="font-semibold">
+                Abhi koi saved cab nahi hai. Booking mein driver details dalne
+                ke baad cab yahan dikhegi.
+              </span>
+            </p>
+          )}
+        </div>
 
         {/* Booking Type */}
         <div className="form-card space-y-3">

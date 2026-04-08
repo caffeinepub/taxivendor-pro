@@ -63,11 +63,35 @@ export default function BookingDetail() {
     if (booking) {
       setStatusValue(booking.status);
       if (booking.driverDetails) {
+        // Booking already has driver details — populate from saved booking data
         setDriverName(booking.driverDetails.driverName);
         setDriverMobile(booking.driverDetails.mobile);
         setCar(booking.driverDetails.car);
         setRcNumber(booking.driverDetails.rcNumber);
         setRcBookUrl(booking.driverDetails.rcBookUrl);
+      } else {
+        // No driver details yet — try to auto-fill from a cab selected in BookingForm
+        try {
+          const stored = sessionStorage.getItem("autofill_cab");
+          if (stored) {
+            const cab = JSON.parse(stored) as {
+              driverName: string;
+              driverMobile: string;
+              carModel: string;
+              rcBook: string;
+              rcNumber?: string;
+            };
+            setDriverName(cab.driverName);
+            setDriverMobile(cab.driverMobile);
+            setCar(cab.carModel);
+            setRcNumber(cab.rcNumber ?? "");
+            setRcBookUrl(cab.rcBook || undefined);
+            // Clear after use so it doesn't bleed into future bookings
+            sessionStorage.removeItem("autofill_cab");
+          }
+        } catch {
+          // sessionStorage unavailable — ignore
+        }
       }
     }
   }, [booking]);

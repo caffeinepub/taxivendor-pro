@@ -28,13 +28,22 @@ export function useVendorCabs() {
       try {
         const cabs = await actor.getVendorCabs();
         return Array.isArray(cabs) ? cabs.map(mapBackendCab) : [];
-      } catch {
-        // Graceful fallback — return empty array instead of crashing
+      } catch (err) {
+        // Log to expose silent failures that were hiding the root cause
+        console.error("[useVendorCabs] Failed to fetch vendor cabs:", err);
         return [];
       }
     },
     enabled: !!actor,
-    retry: 1,
+    retry: 2,
+    // Always fetch fresh data — stale cab list was the root cause of empty cab display.
+    // refetchOnMount:'always' ensures every page visit gets the latest saved cabs,
+    // including cabs just auto-added by setDriverDetails.
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
+    // Poll every 15 seconds so newly added cabs appear without user needing to navigate away
+    refetchInterval: 15000,
   });
 }
 

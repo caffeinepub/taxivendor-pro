@@ -20,9 +20,9 @@ import FacilityMixin "mixins/facility-api";
 import CabMixin "mixins/cab-api";
 import CityMixin "mixins/city-api";
 import StatsMixin "mixins/stats-api";
-import Migration "migration";
 
-(with migration = Migration.run)
+
+
 actor {
   // ── Authorization & object storage (framework-provided) ──────────────────
   let accessControlState = AccessControl.initState();
@@ -64,7 +64,7 @@ actor {
   let notifications = List.empty<NotifTypes.Notification>();
 
   /// Auto-incrementing counter to ensure unique booking IDs even after deletions
-  var nextBookingId = { var value : Nat = 0 };
+  let nextBookingId = { var value : Nat = 0 };
 
   // ── Seed cities on init ───────────────────────────────────────────────────
   CityLib.seedCities(cities);

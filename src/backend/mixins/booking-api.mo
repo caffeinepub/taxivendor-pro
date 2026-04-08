@@ -2,6 +2,7 @@ import Map "mo:core/Map";
 import List "mo:core/List";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Text "mo:core/Text";
 import Time "mo:core/Time";
 import BookingLib "../lib/booking";
 import CabLib "../lib/cab";
@@ -78,14 +79,19 @@ mixin (
       case (?b) {
         // Save driver details and auto-confirm booking in one step
         BookingLib.setDriverDetails(bookings, id, details);
-        // Auto-add cab for this booking's vendor (duplicate-safe by rcBook+vendorId)
+        // Auto-add cab for this booking's vendor (duplicate-safe by rcNumber+vendorId).
+        // Extract the RC book URL from the ExternalBlob (Blob containing UTF-8 encoded URL bytes).
+        let rcBookUrl = switch (details.rcBook.decodeUtf8()) {
+          case (?url) url;
+          case null "";
+        };
         CabLib.addCab(
           cabs,
           b.vendorPrincipal,
           details.driverName,
           details.mobile,
           details.carModel,
-          debug_show(details.rcBook),
+          rcBookUrl,
           details.rcNumber,
           Time.now(),
         );

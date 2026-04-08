@@ -90,25 +90,10 @@ export default function Signup() {
       password: form.password,
     };
 
-    let result: { success: boolean; error?: string };
-    try {
-      result = await signup(data, licenceFile, aadhaarFile);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      // IC void decode artefacts should be treated as success (hook handles this,
-      // but catch here as extra safety)
-      const isVoidDecodeError =
-        msg.toLowerCase().includes("v3") ||
-        msg.toLowerCase().includes("expected") ||
-        msg.toLowerCase().includes("response body");
-      result = isVoidDecodeError
-        ? { success: true }
-        : {
-            success: false,
-            error:
-              "Registration failed. Please try again. / Registration fail ho gayi. Dobara try karein.",
-          };
-    }
+    // Call signup — the hook returns {success, error} and never throws.
+    // Do NOT wrap in try-catch that converts errors to success — that was the root
+    // cause of the "form gets stuck silently" bug.
+    const result = await signup(data, licenceFile, aadhaarFile);
 
     if (result.success) {
       setSuccess(true);
@@ -130,11 +115,16 @@ export default function Signup() {
           <CheckCircle className="w-9 h-9 text-primary" />
         </div>
         <h2 className="font-display font-bold text-2xl text-foreground mb-2">
-          Application Submitted!
+          Application Submitted! / आवेदन सबमिट हो गया!
         </h2>
         <p className="text-muted-foreground text-sm max-w-xs leading-relaxed mb-8">
-          Your vendor application is under review. You'll be able to log in once
-          an admin approves your account.
+          Application submitted! Waiting for admin approval before you can
+          login.
+          <br />
+          <span className="font-semibold">
+            आवेदन सबमिट हो गया! Admin approval ke baad hi aap login kar sakte
+            hain. Please wait.
+          </span>
         </p>
         <Link to="/login">
           <Button className="btn-primary h-11 px-8" data-ocid="go-to-login-btn">
